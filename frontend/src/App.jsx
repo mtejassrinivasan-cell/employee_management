@@ -153,6 +153,11 @@ export function App() {
 
   useEffect(() => {
     loadEmployees();
+    // Auto-sync polling every 3 seconds so Admin automatically sees changes made by teammates!
+    const pollInterval = setInterval(() => {
+      loadEmployees();
+    }, 3000);
+    return () => clearInterval(pollInterval);
   }, []);
 
   // Auth Handlers
@@ -329,14 +334,40 @@ export function App() {
   };
 
   const handleUpdateProfile = async (updateData) => {
-    if (!currentUser?.emp_id) return;
     try {
-      await fetch(`${API_BASE}/employees/patchemployee/${currentUser.emp_id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData)
-      });
-    } catch (e) {}
+      if (currentUser?.emp_id) {
+        const patchRes = await fetch(`${API_BASE}/employees/patchemployee/${currentUser.emp_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData)
+        });
+        const patchJson = await patchRes.json().catch(() => ({}));
+        if (!patchJson.success) {
+          // If record does not exist in DB yet, insert as new employee
+          await fetch(`${API_BASE}/employees/saveemployee`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              emp_id: currentUser.emp_id,
+              ...updateData,
+              dept_name: currentUser.dept || 'Engineering'
+            })
+          });
+        }
+      } else {
+        await fetch(`${API_BASE}/employees/saveemployee`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...updateData,
+            dept_name: currentUser?.dept || 'Engineering'
+          })
+        });
+      }
+      await loadEmployees();
+    } catch (e) {
+      console.warn('Profile update sync notice:', e);
+    }
 
     const updated = {
       ...currentUser,
@@ -347,7 +378,7 @@ export function App() {
       city: updateData.city
     };
     setCurrentUser(updated);
-    setEmployees(employees.map((e) => (e.emp_id === currentUser.emp_id ? updated : e)));
+    setEmployees(employees.map((e) => (e.emp_id === currentUser?.emp_id ? updated : e)));
   };
 
   // Task & Document Handlers
@@ -471,6 +502,7 @@ export function App() {
               onAddEmployee={handleAddEmployee}
               onEditEmployee={handleEditEmployee}
               onDeleteEmployee={handleDeleteEmployee}
+              onRefresh={loadEmployees}
             />
           )}
           {role === 'admin' && activePage === 'alloc' && (

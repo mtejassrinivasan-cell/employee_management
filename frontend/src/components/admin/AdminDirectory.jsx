@@ -13,7 +13,8 @@ export const AdminDirectory = ({
   employees,
   onAddEmployee,
   onEditEmployee,
-  onDeleteEmployee
+  onDeleteEmployee,
+  onRefresh
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('');
@@ -159,9 +160,21 @@ export const AdminDirectory = ({
             </select>
           </div>
 
-          <button type="button" className="btn" onClick={handleOpenAdd}>
-            <Icon name="plus" size={16} /> Add Employee
-          </button>
+          <div className="row" style={{ gap: '8px' }}>
+            {onRefresh && (
+              <button
+                type="button"
+                className="btn ghost"
+                onClick={onRefresh}
+                title="Refresh employee data from MySQL"
+              >
+                ⟳ Refresh
+              </button>
+            )}
+            <button type="button" className="btn" onClick={handleOpenAdd}>
+              <Icon name="plus" size={16} /> Add Employee
+            </button>
+          </div>
         </div>
 
         <div className="scroll">
