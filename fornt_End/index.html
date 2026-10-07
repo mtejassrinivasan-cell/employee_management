@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workforce Portal - Employee Management System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f6fb;
+  --surface: #ffffff;
+  --ink: #12182b;
+  --mute: #5d667f;
+  --line: #e2e6f0;
+  --p: #1e3a8a;
+  --p2: #3b82f6;
+  --soft: #e8efff;
+  --ok: #16a34a;
+  --warn: #d99a06;
+  --bad: #dc2626;
+  --shadow: 0 1px 3px rgba(18,24,43,0.06), 0 8px 16px -4px rgba(18,24,43,0.04);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body.admin {
+  --p: #0f766e;
+  --p2: #10b981;
+  --soft: #dcf5ee;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1322;
+    --surface: #161d33;
+    --ink: #e8ecf8;
+    --mute: #98a2c0;
+    --line: #27304d;
+    --soft: #1c2a52;
+    --shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  body.admin:not([data-theme="light"]) {
+    --soft: #12342f;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1322;
+  --surface: #161d33;
+  --ink: #e8ecf8;
+  --mute: #98a2c0;
+  --line: #27304d;
+  --soft: #1c2a52;
+  --shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+:root[data-theme="dark"] body.admin {
+  --soft: #12342f;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font: 14px/1.5 "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  transition: background .2s ease, color .2s ease;
+}
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+button { cursor: pointer; transition: transform .1s, opacity .15s; }
+button:active { transform: scale(0.98); }
+:focus-visible { outline: 2px solid var(--p2); outline-offset: 2px; }
+.hide { display: none !important; }
+
+/* Gate / Login Screen */
+.gate {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+}
+.brand {
+  background: linear-gradient(160deg, #1e3a8a, #3b82f6);
+  color: #fff;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+body.admin .brand {
+  background: linear-gradient(160deg, #0f766e, #10b981);
+}
+.brand::before {
+  content: "";
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+  pointer-events: none;
+}
+.brand h1 {
+  font-size: 38px;
+  line-height: 1.15;
+  margin: 18px 0 14px;
+  max-width: 12em;
+  letter-spacing: -.02em;
+}
+.brand p {
+  max-width: 32em;
+  opacity: .88;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 32px;
+  max-width: 440px;
+}
+.split div {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+}
+.split b { display: block; margin-bottom: 4px; font-size: 14px; }
+.formwrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--bg);
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.login {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+}
+.login h2 { margin: 0 0 6px; font-size: 24px; font-weight: 700; }
+.login .sub { color: var(--mute); margin: 0 0 20px; font-size: 13px; }
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+}
+.tabs button {
+  border: 0;
+  background: none;
+  padding: 9px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--mute);
+}
+.tabs button.on {
+  background: var(--surface);
+  color: var(--p);
+  box-shadow: var(--shadow);
+}
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  margin: 14px 0 6px;
+  color: var(--ink);
+}
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--p2);
+  box-shadow: 0 0 0 3px var(--soft);
+}
+.btn {
+  background: var(--p);
+  color: #fff;
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 18px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:hover { opacity: 0.92; }
+.btn.full { width: 100%; margin-top: 20px; }
+.btn.ghost { background: none; color: var(--p); border: 1px solid var(--line); }
+.btn.ghost:hover { background: var(--soft); }
+.btn.danger { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+.btn.danger:hover { background: #fecaca; }
+.link {
+  background: none;
+  border: 0;
+  color: var(--p2);
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Shell Layout */
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+aside {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 20px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+.logo {
+  font-weight: 700;
+  font-size: 16px;
+  padding: 6px 10px 20px;
+  color: var(--p);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 0;
+  background: none;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: var(--mute);
+  font-weight: 500;
+  width: 100%;
+}
+.nav:hover { background: var(--soft); color: var(--p); }
+.nav.on { background: var(--soft); color: var(--p); font-weight: 600; }
+.nav svg { width: 18px; height: 18px; flex: none; stroke: currentColor; }
+.spacer { flex: 1; }
+main { min-width: 0; display: flex; flex-direction: column; }
+.top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.top h2 { margin: 0; font-size: 19px; font-weight: 700; flex: 1; }
+.status {
+  width: auto;
+  padding: 7px 12px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--ok);
+}
+.av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--p);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  flex: none;
+}
+.bell {
+  position: relative;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--mute);
+}
+.bell i {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  background: var(--bad);
+  border-radius: 50%;
+}
+.content {
+  padding: 24px 28px;
+  display: grid;
+  gap: 20px;
+  flex: 1;
+}
+
+/* Grids and Cards */
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.stat {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.stat small { color: var(--mute); font-weight: 600; font-size: 12px; }
+.stat b { display: block; font-size: 28px; margin-top: 4px; font-weight: 700; }
+.stat em { font-style: normal; font-size: 12px; color: var(--ok); font-weight: 600; margin-top: 4px; }
+.pad { padding: 20px; }
+.pad h3 { margin: 0 0 14px; font-size: 16px; font-weight: 700; }
+.two { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 540px; }
+th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; color: var(--mute); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--soft); }
+
+/* Badges & Pills */
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--soft);
+  color: var(--p);
+}
+.pill.High { background: #fde4e4; color: #b91c1c; }
+.pill.Medium { background: #fdf1d1; color: #92600a; }
+.pill.Low { background: #dff5e6; color: #166534; }
+:root[data-theme="dark"] .pill.High { background: #451a1a; color: #fca5a5; }
+:root[data-theme="dark"] .pill.Medium { background: #3f2e10; color: #fde047; }
+:root[data-theme="dark"] .pill.Low { background: #12351f; color: #86efac; }
+
+/* Kanban Board */
+.kan {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.col {
+  background: var(--bg);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 300px;
+  transition: background .2s, border-color .2s;
+}
+.col.over { border-color: var(--p2); background: var(--soft); }
+.col h4 {
+  margin: 2px 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.task {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: grab;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: transform .15s, box-shadow .15s;
+}
+.task:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.task:active { cursor: grabbing; }
+.task p { margin: 0 0 8px; font-weight: 600; font-size: 13px; }
+.task small { color: var(--mute); font-size: 11px; }
+
+/* Calendar */
+.cal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal div {
+  aspect-ratio: 1.25;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 12px;
+  padding: 6px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cal .h {
+  background: none;
+  aspect-ratio: auto;
+  color: var(--mute);
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 0;
+}
+.cal .P { background: #dff5e6; color: #166534; font-weight: 600; }
+.cal .L { background: #fde4e4; color: #b91c1c; font-weight: 600; }
+.cal .W { background: #fdf1d1; color: #92600a; font-weight: 600; }
+.cal .X { opacity: .45; }
+:root[data-theme="dark"] .cal .P { background: #133923; color: #86efac; }
+:root[data-theme="dark"] .cal .L { background: #451b1b; color: #fca5a5; }
+:root[data-theme="dark"] .cal .W { background: #3e2e12; color: #fde047; }
+
+/* Miscellaneous UI */
+.bar { height: 8px; background: var(--bg); border-radius: 9px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--p2); }
+.row { display: flex; align-items: center; gap: 12px; }
+.grow { flex: 1; }
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0 16px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--soft);
+  color: var(--p);
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  margin: 2px 4px 2px 0;
+  font-weight: 600;
+}
+.chip button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--p);
+  font-weight: 700;
+  cursor: pointer;
+}
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 28, 0.6);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 100;
+  animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal .card {
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+.modal h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
+.picks {
+  display: grid;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px;
+}
+.picks label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+.picks input { width: auto; margin: 0; }
+.toast {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--surface);
+  padding: 11px 20px;
+  border-radius: 10px;
+  z-index: 120;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastIn .2s ease;
+}
+@keyframes toastIn { from { transform: translate(-50%, 15px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.range {
+  display: grid;
+  grid-template-columns: 130px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0;
+}
+.range input { padding: 0; }
+.menu { display: none; }
+
+/* Responsive adjustments */
+@media (max-width: 860px) {
+  .gate { grid-template-columns: 1fr; }
+  .brand { padding: 32px 24px; }
+  .brand h1 { font-size: 28px; }
+  .shell { grid-template-columns: 1fr; }
+  aside {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 250px;
+    z-index: 30;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  }
+  aside.open { transform: none; }
+  .menu {
+    display: grid;
+    place-items: center;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  .two { grid-template-columns: 1fr; }
+  .content, .top { padding-left: 18px; padding-right: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- GATE / AUTHENTICATION -->
+<section class="gate" id="gate">
+  <div class="brand">
+    <div style="font-weight:700;font-size:20px;display:flex;align-items:center;gap:8px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Workforce Portal
+    </div>
+    <div>
+      <h1>One place for the work, the people and the hours.</h1>
+      <p>Employees track tasks, attendance and performance. HR assigns work, evaluates outcomes, and monitors real-time staff status across the organization.</p>
+      <div class="split">
+        <div><b>Employee portal</b>Tasks, attendance, document center</div>
+        <div><b>Admin / HR portal</b>Assign, evaluate, live monitoring</div>
+      </div>
+    </div>
+    <small style="opacity:.8;display:flex;align-items:center;gap:6px">
+      <span class="dot" style="background:#4ade80"></span> Integrated with Employee Database &amp; REST APIs
+    </small>
+  </div>
+  <div class="formwrap">
+    <div class="card login">
+      <!-- Login View -->
+      <div id="loginView">
+        <h2>Sign in</h2>
+        <p class="sub">Choose your portal role to continue.</p>
+        <div class="tabs" role="tablist">
+          <button class="on" data-role="employee">Employee login</button>
+          <button data-role="admin">Admin login</button>
+        </div>
+        <label for="em">Work email</label>
+        <input id="em" type="email" placeholder="name@company.com">
+        <label for="pw">Password</label>
+        <input id="pw" type="password" placeholder="Enter password">
+        <button class="btn full" id="signin">Sign in as employee</button>
+        <p class="sub" style="margin:12px 0 0;text-align:center;font-size:12px" id="credHint">
+          Employee login hint: default password is <b>password123</b>
+        </p>
+        <p class="sub" style="margin:14px 0 0;text-align:center" id="signupLine">
+          New here? <button class="link" id="toSignup">Create employee account</button>
+        </p>
+      </div>
+      <!-- Signup View -->
+      <div id="signupView" class="hide">
+        <h2>Create account</h2>
+        <p class="sub">Employee onboarding registration</p>
+        <div class="fields">
+          <div><label>First name *</label><input id="suFirst" placeholder="Enter first name" required></div>
+          <div><label>Last name</label><input id="suLast" placeholder="Enter last name"></div>
+        </div>
+        <label>Work email *</label>
+        <input type="email" id="suEmail" placeholder="name@company.com" required>
+        <div class="fields">
+          <div><label>Hire date</label><input type="date" id="suHireDate"></div>
+          <div><label>Employee ID (optional)</label><input type="number" id="suEmpId" placeholder="Auto-generated"></div>
+        </div>
+        <div class="fields">
+          <div>
+            <label>Department</label>
+            <select id="suDept">
+              <option value="Engineering">Engineering</option>
+              <option value="Design">Design</option>
+              <option value="Operations">Operations</option>
+              <option value="Finance">Finance</option>
+              <option value="HR">HR</option>
+              <option value="sales">Sales</option>
+              <option value="support">Support</option>
+              <option value="development">Development</option>
+            </select>
+          </div>
+          <div><label>City / Location</label><input id="suCity" placeholder="Enter city / location"></div>
+        </div>
+        <label>Initial password</label>
+        <input type="password" id="suPass" placeholder="••••••••">
+        <button class="btn full" id="doSignup">Create account</button>
+        <p class="sub" style="margin:18px 0 0;text-align:center">
+          <button class="link" id="toLogin">Back to sign in</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN APPLICATION SHELL -->
+<div class="shell hide" id="shell">
+  <!-- Sidebar -->
+  <aside id="side">
+    <div class="logo" id="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span id="logoText">Workforce Portal</span>
+    </div>
+    <div id="nav"></div>
+    <div class="spacer"></div>
+    <button class="nav" id="theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      Switch theme
+    </button>
+    <button class="nav" id="logout">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sign out
+    </button>
+  </aside>
+
+  <!-- Main View -->
+  <main>
+    <header class="top">
+      <button class="menu" id="menu" aria-label="Menu">☰</button>
+      <h2 id="title">Overview</h2>
+      <select class="status" id="statusSel" aria-label="Availability">
+        <option value="Available">🟢 Available</option>
+        <option value="In Meeting">🟡 In Meeting</option>
+        <option value="On Leave">🔴 On Leave</option>
+        <option value="Out for the Day">⚪ Out for the Day</option>
+      </select>
+      <button class="bell" aria-label="Notifications" id="bell" title="Notifications">
+        🔔<i></i>
+      </button>
+      <div class="av" id="avatar" title="Current User">TM</div>
+    </header>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+
+<!-- Modal & Toast Containers -->
+<div id="modalRoot"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// API Configuration
+const API_BASE = (window.location.protocol.startsWith('http') && window.location.port !== '5500' && window.location.port !== '5173')
+  ? ''
+  : 'http://localhost:3000';
+
+// SVG Navigation & UI Icons
+const ic = {
+  home: '<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+  task: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  cal: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>',
+  doc: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  team: '<circle cx="9" cy="8" r="3.5"/><path d="M2 21a7 7 0 0 1 14 0M17 4a3.5 3.5 0 0 1 0 7M22 21a7 7 0 0 0-4-6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+};
+const svg = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic[n]||''}</svg>`;
+
+const STAT = {
+  Available: 'var(--ok)',
+  'In Meeting': 'var(--warn)',
+  'On Leave': 'var(--bad)',
+  'Out for the Day': 'var(--mute)'
+};
+
+// Fallback seed data in case MySQL is empty or offline
+let sampleEMP = [
+  ['Tejas M', 'Engineering', 'Available', 201],
+  ['Priya Raman', 'Design', 'In Meeting', 202],
+  ['Arun Kumar', 'Operations', 'On Leave', 203],
+  ['Meera Iyer', 'Engineering', 'Available', 204],
+  ['Karthik S', 'Finance', 'Out for the Day', 205],
+  ['Divya N', 'Engineering', 'Available', 206],
+  ['Rohan P', 'HR', 'In Meeting', 207],
+  ['Sana Ali', 'Design', 'Available', 208]
+].map((e, i) => ({
+  emp_id: e[3],
+  id: 'EMP-' + e[3],
+  name: e[0],
+  first_name: e[0].split(' ')[0],
+  last_name: e[0].split(' ').slice(1).join(' '),
+  dept: e[1],
+  status: e[2],
+  email: e[0].toLowerCase().replace(/\s+/g, '') + '@company.com',
+  city: 'Chennai',
+  salary: 320000,
+  experience: 4,
+  score: [88, 92, 76, 81, 69, 90, 84, 78][i]
+}));
+
+let EMP = [...sampleEMP];
+
+let tasks = [
+  { id: 1, t: 'Build REST endpoints for orders', p: 'High', d: 'Oct 12', s: 0, assignee: 'Tejas M' },
+  { id: 2, t: 'Write unit tests for auth', p: 'Medium', d: 'Oct 15', s: 0, assignee: 'Meera Iyer' },
+  { id: 3, t: 'Fix dashboard filter bug', p: 'High', d: 'Oct 10', s: 1, assignee: 'Tejas M' },
+  { id: 4, t: 'Review API docs & OpenAPI spec', p: 'Low', d: 'Oct 18', s: 2, assignee: 'Divya N' },
+  { id: 5, t: 'Compile weekly sprint report', p: 'Medium', d: 'Oct 05', s: 3, assignee: 'Tejas M' },
+  { id: 6, t: 'Database schema migration', p: 'High', d: 'Oct 03', s: 3, assignee: 'Arun Kumar' }
+];
+
+const COLS = ['To Do', 'In Progress', 'Under Review', 'Completed'];
+
+let docs = [
+  ['Leave policy 2026.pdf', 'Policy', 'HR', 'Oct 01'],
+  ['Q3 team performance brief.pdf', 'Report', 'HR', 'Sep 28'],
+  ['Code of conduct & ethics.pdf', 'Policy', 'HR', 'Sep 02'],
+  ['Employee handbook v3.pdf', 'Manual', 'HR', 'Aug 15']
+];
+
+let uploads = [
+  ['Weekly status report.pdf', 'Tejas M', 'Oct 04'],
+  ['Architecture diagram v2.png', 'Meera Iyer', 'Oct 02']
+];
+
+let role = 'employee';
+let page = 'dashboard';
+let me = EMP[0];
+let dbConnected = false;
+
+const NAV = {
+  employee: [
+    ['dashboard', 'My dashboard', 'home'],
+    ['tasks', 'My tasks', 'task'],
+    ['performance', 'Performance', 'chart'],
+    ['attendance', 'Attendance', 'cal'],
+    ['documents', 'Document hub', 'doc'],
+    ['profile', 'Profile settings', 'user']
+  ],
+  admin: [
+    ['dashboard', 'Overview', 'home'],
+    ['directory', 'Employee directory', 'team'],
+    ['alloc', 'Task allocation', 'task'],
+    ['perf', 'Performance editor', 'chart'],
+    ['docs', 'Document center', 'doc'],
+    ['attend', 'Attendance monitor', 'cal']
+  ]
+};
+
+const TITLES = Object.fromEntries([...NAV.employee, ...NAV.admin].map(n => [n[0], n[1]]));
+
+// Toast Notification
+function toast(m) {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<span class="dot" style="background:var(--p2)"></span> ${m}`;
+  document.body.append(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+// Modal Helpers
+function closeModal() {
+  $('#modalRoot').innerHTML = '';
+}
+function modal(h) {
+  $('#modalRoot').innerHTML = `<div class="modal"><div class="card">${h}</div></div>`;
+  $('.modal').onclick = e => {
+    if (e.target.classList.contains('modal')) closeModal();
+  };
+}
+
+// Fetch Employees from Backend
+async function fetchEmployees() {
+  try {
+    const res = await fetch(`${API_BASE}/employees/getall`);
+    const json = await res.json();
+    if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+      dbConnected = true;
+      EMP = json.data.map((r, i) => {
+        const fullName = `${r.first_name || ''} ${r.last_name || ''}`.trim() || `Employee ${r.emp_id}`;
+        return {
+          emp_id: r.emp_id,
+          id: 'EMP-' + r.emp_id,
+          name: fullName,
+          first_name: r.first_name || '',
+          last_name: r.last_name || '',
+          dept: r.dept_name || 'Engineering',
+          status: i % 4 === 0 ? 'Available' : (i % 4 === 1 ? 'In Meeting' : (i % 4 === 2 ? 'Available' : 'On Leave')),
+          email: r.E_mail_id || `emp${r.emp_id}@company.com`,
+          city: r.city || r.location || 'Chennai',
+          location: r.location || r.city || 'Chennai',
+          salary: r.salary || 250000,
+          experience: r.experience || 3,
+          hire_date: r.hire_date ? String(r.hire_date).slice(0, 10) : '2022-01-15',
+          score: [88, 92, 76, 81, 69, 90, 84, 78, 85, 91][i % 10]
+        };
+      });
+      // Maintain user state
+      if (!me || !EMP.some(e => e.emp_id === me.emp_id)) {
+        me = EMP[0];
+      } else {
+        me = EMP.find(e => e.emp_id === me.emp_id);
+      }
+    }
+  } catch (err) {
+    console.warn('Backend API connection warning (using offline memory):', err.message);
+  }
+}
+
+// Persistent Credential Store for Registered Users
+function getStoredPasswords() {
+  try {
+    return JSON.parse(localStorage.getItem('wf_passwords') || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+function setStoredPassword(email, pass) {
+  try {
+    const map = getStoredPasswords();
+    map[email.toLowerCase()] = pass;
+    localStorage.setItem('wf_passwords', JSON.stringify(map));
+  } catch (e) {}
+}
+
+// Role Tab Toggling
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => {
+    role = b.dataset.role;
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    $('#signin').textContent = 'Sign in as ' + role;
+    $('#signupLine').classList.toggle('hide', role === 'admin');
+    $('#pw').value = '';
+    const hint = $('#credHint');
+    if (role === 'admin') {
+      $('#em').value = 'hr@company.com';
+      if (hint) hint.innerHTML = 'Admin login: <b>hr@company.com</b> &nbsp;|&nbsp; Password: <b>admin123</b>';
+    } else {
+      $('#em').value = (me && me.email) ? me.email : '';
+      if (hint) hint.innerHTML = 'Employee login: use your registered password or default <b>password123</b>';
+    }
+  };
+});
+
+$('#toSignup').onclick = () => {
+  $('#loginView').classList.add('hide');
+  $('#signupView').classList.remove('hide');
+};
+
+$('#toLogin').onclick = () => {
+  $('#signupView').classList.add('hide');
+  $('#loginView').classList.remove('hide');
+};
+
+// Sign Up Handler (Persists to MySQL Database)
+$('#doSignup').onclick = async () => {
+  const first = $('#suFirst').value.trim();
+  const last = $('#suLast').value.trim();
+  const email = $('#suEmail').value.trim();
+  const dept = $('#suDept').value;
+  const city = $('#suCity').value.trim() || 'Chennai';
+  const hire_date = $('#suHireDate').value || new Date().toISOString().slice(0, 10);
+  const empIdVal = $('#suEmpId').value.trim();
+  const passwordVal = $('#suPass').value.trim();
+
+  if (!first || !email) {
+    toast('Please fill in First Name and Work Email');
+    return;
+  }
+  if (!passwordVal) {
+    toast('Please create an initial password for your account');
+    $('#suPass').focus();
+    return;
+  }
+
+  const payload = {
+    first_name: first,
+    last_name: last,
+    E_mail_id: email,
+    dept_name: dept,
+    city: city,
+    location: city,
+    hire_date: hire_date,
+    salary: 280000,
+    experience: 2,
+    deptid: 1021,
+    reports: 101
+  };
+  if (empIdVal) payload.emp_id = Number(empIdVal);
+
+  try {
+    const res = await fetch(`${API_BASE}/employees/saveemployee`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.success) {
+      setStoredPassword(email, passwordVal);
+      toast('Account created successfully in database! Sign in now.');
+      await fetchEmployees();
+      $('#em').value = email;
+      $('#pw').value = '';
+      $('#toLogin').click();
+    } else {
+      toast('Error: ' + (json.message || 'Could not save employee'));
+    }
+  } catch (err) {
+    // Local memory fallback
+    const newId = empIdVal ? Number(empIdVal) : (EMP.length ? Math.max(...EMP.map(e => e.emp_id)) + 1 : 101);
+    const newEmp = {
+      emp_id: newId,
+      id: 'EMP-' + newId,
+      name: `${first} ${last}`.trim(),
+      first_name: first,
+      last_name: last,
+      dept: dept,
+      status: 'Available',
+      email: email,
+      city: city,
+      salary: 280000,
+      experience: 2,
+      score: 85
+    };
+    EMP.unshift(newEmp);
+    me = newEmp;
+    setStoredPassword(email, passwordVal);
+    toast('Account created in session. Sign in now.');
+    $('#em').value = email;
+    $('#pw').value = '';
+    $('#toLogin').click();
+  }
+};
+
+// Sign In Handler with Credential Validation
+$('#signin').onclick = async () => {
+  const enteredEmail = $('#em').value.trim().toLowerCase();
+  const enteredPassword = $('#pw').value;
+
+  if (!enteredEmail) {
+    toast('Please enter your work email');
+    $('#em').focus();
+    return;
+  }
+  if (!enteredPassword) {
+    toast('Please enter your password');
+    $('#pw').focus();
+    return;
+  }
+
+  if (role === 'admin') {
+    const validAdminEmails = ['hr@company.com', 'admin@company.com', 'admin@workforce.com'];
+    const isAdminEmail = validAdminEmails.includes(enteredEmail) || enteredEmail.startsWith('hr@') || enteredEmail.startsWith('admin@');
+    
+    if (!isAdminEmail) {
+      toast('Invalid admin email. Use hr@company.com');
+      return;
+    }
+    if (enteredPassword !== 'admin123' && enteredPassword !== 'admin') {
+      toast('Incorrect admin password! (Hint: admin123)');
+      return;
+    }
+  } else {
+    // Role === 'employee'
+    const matched = EMP.find(e => (e.email && e.email.toLowerCase() === enteredEmail) || e.name.toLowerCase() === enteredEmail);
+    if (!matched) {
+      toast('No employee account found for: ' + enteredEmail);
+      return;
+    }
+
+    // Verify employee password against registered password or default password
+    const storedPasswords = getStoredPasswords();
+    const registeredPass = storedPasswords[enteredEmail];
+
+    const isMatch = registeredPass 
+      ? (enteredPassword === registeredPass)
+      : (enteredPassword === 'password123' || enteredPassword === 'password' || enteredPassword === 'emp123' || enteredPassword === String(matched.emp_id));
+
+    if (!isMatch) {
+      toast('Incorrect password! Please try again.');
+      return;
+    }
+
+    me = matched;
+  }
+
+  // Clear password input for security
+  $('#pw').value = '';
+
+  document.body.classList.toggle('admin', role === 'admin');
+  $('#gate').classList.add('hide');
+  $('#shell').classList.remove('hide');
+
+  $('#logoText').textContent = role === 'admin' ? 'Workforce · HR Admin' : 'Workforce · Employee';
+  const initials = role === 'admin' ? 'HR' : (me && me.name ? me.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase() : 'TM');
+  $('#avatar').textContent = initials;
+  $('#statusSel').classList.toggle('hide', role === 'admin');
+
+  page = 'dashboard';
+  nav();
+  toast(role === 'admin' ? 'Welcome back, HR Administrator' : `Signed in as ${me.name}`);
+};
+
+// Sign Out Handler
+$('#logout').onclick = () => {
+  $('#shell').classList.add('hide');
+  $('#gate').classList.remove('hide');
+  document.body.classList.remove('admin');
+  $('#pw').value = '';
+  toast('Signed out');
+};
+
+// Theme Toggle
+function applyTheme(isDark) {
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+  localStorage.setItem('workforce_theme', isDark ? 'dark' : 'light');
+}
+const savedTheme = localStorage.getItem('workforce_theme');
+if (savedTheme) {
+  document.documentElement.dataset.theme = savedTheme;
+}
+$('#theme').onclick = () => {
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  applyTheme(!isDark);
+  toast(`Theme set to ${!isDark ? 'Dark' : 'Light'}`);
+};
+
+// Responsive Menu Toggle
+$('#menu').onclick = () => $('#side').classList.toggle('open');
+
+// Notification Bell
+$('#bell').onclick = () => {
+  const badge = $('#bell i');
+  if (badge) badge.remove();
+  toast(role === 'admin' ? '2 employee documents are pending approval' : 'New task assigned: Review REST endpoints');
+};
+
+// Employee Live Status Selector
+$('#statusSel').onchange = e => {
+  if (me) me.status = e.target.value;
+  toast('Status updated to ' + e.target.value);
+};
+
+// Navigation Renderer
+function nav() {
+  $('#nav').innerHTML = NAV[role].map(n => `
+    <button class="nav ${n[0] === page ? 'on' : ''}" data-p="${n[0]}">
+      ${svg(n[2])} ${n[1]}
+    </button>
+  `).join('');
+
+  $$('#nav .nav').forEach(b => {
+    b.onclick = () => {
+      page = b.dataset.p;
+      $('#side').classList.remove('open');
+      nav();
+    };
+  });
+
+  $('#title').textContent = TITLES[page] || 'Overview';
+  $('#view').innerHTML = (VIEWS[role + ':' + page] || (() => ''))();
+  bind();
+}
+
+// UI Reusable Helpers
+const stat = (l, v, n) => `<div class="card stat"><small>${l}</small><b>${v}</b><em>${n || ''}</em></div>`;
+const pill = s => `<span class="pill ${s}">${s}</span>`;
+const sdot = s => `<span class="dot" style="background:${STAT[s] || 'var(--mute)'}"></span>${s}`;
+
+function barChart(vals, labels) {
+  const w = 380, h = 150, bw = w / vals.length;
+  return `
+    <svg viewBox="0 0 ${w} ${h + 24}" style="width:100%;height:auto;display:block">
+      <g>
+        ${vals.map((v, i) => `
+          <rect x="${i * bw + 10}" y="${h - v * 1.35}" width="${bw - 20}" height="${v * 1.35}" rx="5" fill="var(--p2)" opacity="${0.5 + i / (vals.length * 1.8)}">
+            <title>${labels[i]}: ${v}</title>
+          </rect>
+          <text x="${i * bw + bw / 2}" y="${h + 16}" text-anchor="middle" font-size="11" fill="var(--mute)" font-weight="600">${labels[i]}</text>
+          <text x="${i * bw + bw / 2}" y="${h - v * 1.35 - 6}" text-anchor="middle" font-size="11" fill="var(--ink)" font-weight="700">${v}</text>
+        `).join('')}
+      </g>
+    </svg>
+  `;
+}
+
+function radar(v, l) {
+  const c = 90, r = 70, n = v.length;
+  const pt = (i, k) => [c + Math.sin(i * 2 * Math.PI / n) * r * k, c - Math.cos(i * 2 * Math.PI / n) * r * k];
+  const ring = k => v.map((_, i) => pt(i, k).join(',')).join(' ');
+  return `
+    <svg viewBox="0 0 180 180" style="width:100%;max-width:260px;display:block;margin:auto">
+      ${[0.33, 0.66, 1].map(k => `<polygon points="${ring(k)}" fill="none" stroke="var(--line)" stroke-width="1.2"/>`).join('')}
+      <polygon points="${v.map((x, i) => pt(i, x / 100).join(',')).join(' ')}" fill="var(--p2)" fill-opacity="0.25" stroke="var(--p2)" stroke-width="2"/>
+      ${l.map((t, i) => {
+        const [x, y] = pt(i, 1.22);
+        return `<text x="${x}" y="${y}" font-size="9.5" text-anchor="middle" fill="var(--mute)" font-weight="600">${t}</text>`;
+      }).join('')}
+    </svg>
+  `;
+}
+
+const kanban = () => `
+  <div class="row" style="margin-bottom:12px;justify-content:space-between">
+    <p style="margin:0;color:var(--mute)">Drag cards across columns to update task progress.</p>
+    <button class="btn" id="addPersonalTask">${svg('plus')} New Task</button>
+  </div>
+  <div class="kan">
+    ${COLS.map((c, ci) => `
+      <div class="col" data-c="${ci}">
+        <h4>${c} <span class="pill">${tasks.filter(t => t.s === ci).length}</span></h4>
+        ${tasks.map((t, i) => t.s === ci ? `
+          <div class="task" draggable="true" data-i="${i}">
+            <p>${t.t}</p>
+            <div class="row" style="justify-content:space-between">
+              ${pill(t.p)}
+              <small>Due ${t.d}</small>
+            </div>
+          </div>
+        ` : '').join('')}
+      </div>
+    `).join('')}
+  </div>
+`;
+
+function calGrid() {
+  let h = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => `<div class="h">${d}</div>`).join('');
+  for (let d = 1; d <= 31; d++) {
+    const wk = (d + 2) % 7;
+    const k = wk >= 5 ? 'X' : (d === 9 ? 'L' : (d === 14 || d === 21 ? 'W' : (d > 7 ? '' : 'P')));
+    h += `
+      <div class="${d > 7 ? '' : k || 'P'} ${wk >= 5 ? 'X' : ''} ${d === 9 ? 'L' : ''} ${d === 14 || d === 21 ? 'W' : ''}">
+        <span>${d}</span>
+        ${wk < 5 && d <= 7 ? '<small style="font-size:10px;opacity:.9">09:00–18:00</small>' : ''}
+      </div>
+    `;
+  }
+  return `<div class="cal">${h}</div>`;
+}
+
+// VIEW DEFINITIONS
+const VIEWS = {
+  // EMPLOYEE VIEWS
+  'employee:dashboard': () => `
+    <div class="grid4">
+      ${stat('Task completion', '78%', '+6% this month')}
+      ${stat('Performance score', me.score || '88', 'Top 20% tier')}
+      ${stat('Timeliness index', '92', '+3 pts')}
+      ${stat('Hours this week', '34.5 h', 'Goal: 40 h')}
+    </div>
+    <div class="two">
+      <div class="card pad">
+        <div class="row" style="margin-bottom:12px;justify-content:space-between">
+          <h3 style="margin:0">Tasks due soon</h3>
+          <span class="pill">${tasks.filter(t => t.s < 3).length} open</span>
+        </div>
+        ${tasks.filter(t => t.s < 3).slice(0, 5).map(t => `
+          <div class="row" style="padding:10px 0;border-bottom:1px solid var(--line)">
+            <span class="grow" style="font-weight:600">${t.t}</span>
+            ${pill(t.p)}
+            <small style="color:var(--mute)">Due ${t.d}</small>
+          </div>
+        `).join('')}
+      </div>
+      <div class="card pad">
+        <h3>Monthly performance trend</h3>
+        ${barChart([72, 78, 81, 85, me.score || 88], ['Jun', 'Jul', 'Aug', 'Sep', 'Oct'])}
+      </div>
+    </div>
+  `,
+
+  'employee:tasks': () => kanban(),
+
+  'employee:performance': () => `
+    <div class="grid4">
+      ${stat('Completion rate', '84%')}
+      ${stat('Monthly score', me.score || '88')}
+      ${stat('Timeliness', '92%')}
+      ${stat('Reviews received', '4')}
+    </div>
+    <div class="two">
+      <div class="card pad">
+        <h3>Score trend (Last 5 Months)</h3>
+        ${barChart([72, 78, 81, 85, me.score || 88], ['Jun', 'Jul', 'Aug', 'Sep', 'Oct'])}
+      </div>
+      <div class="card pad">
+        <h3>Skill growth matrix</h3>
+        ${radar([85, 70, 90, 65, 80], ['Backend', 'Security', 'SQL', 'System', 'Teamwork'])}
+      </div>
+    </div>
+    <div class="card pad">
+      <h3>Latest supervisor evaluation</h3>
+      <p style="margin:0;color:var(--ink);line-height:1.6">
+        "Excellent execution on MySQL database optimization and REST API service development. Consistently meets sprint deliverables on time. Keep focusing on writing modular integration tests."
+      </p>
+      <small style="display:block;margin-top:10px;color:var(--mute)">Evaluated by Engineering Lead · Oct 04, 2026</small>
+    </div>
+  `,
+
+  'employee:attendance': () => `
+    <div class="grid4">
+      ${stat('Present', '6 days')}
+      ${stat('Logged hours', '52.4 h')}
+      ${stat('Leave taken', '1 day')}
+      ${stat('Remote days', '2 days')}
+    </div>
+    <div class="two">
+      <div class="card pad">
+        <h3>October Attendance Calendar</h3>
+        ${calGrid()}
+        <p style="margin:14px 0 0;font-size:12px;color:var(--mute)">
+          🟢 Green: Present &nbsp;|&nbsp; 🔴 Red: Leave &nbsp;|&nbsp; 🟡 Amber: Remote / WFH &nbsp;|&nbsp; Muted: Weekend
+        </p>
+      </div>
+      <div class="card pad">
+        <h3>Today's activity log</h3>
+        ${[
+          ['09:02 AM', 'Available'],
+          ['11:00 AM', 'In Meeting'],
+          ['12:30 PM', 'Available'],
+          ['03:15 PM', 'Available']
+        ].map(r => `
+          <div class="row" style="padding:10px 0;border-bottom:1px solid var(--line)">
+            <small style="width:70px;color:var(--mute);font-weight:600">${r[0]}</small>
+            ${sdot(r[1])}
+          </div>
+        `).join('')}
+        <div style="margin-top:18px">
+          <button class="btn full" id="clock">Clock out for today</button>
+        </div>
+      </div>
+    </div>
+  `,
+
+  'employee:documents': () => `
+    <div class="card pad">
+      <div class="row" style="margin-bottom:12px">
+        <h3 class="grow" style="margin:0">Shared by HR</h3>
+      </div>
+      <div class="scroll">
+        <table>
+          <tr><th>Document</th><th>Category</th><th>Published By</th><th>Date</th><th>Action</th></tr>
+          ${docs.map(d => `
+            <tr>
+              <td><b>${d[0]}</b></td>
+              <td><span class="pill">${d[1]}</span></td>
+              <td>${d[2]}</td>
+              <td>${d[3]}</td>
+              <td><button class="btn ghost dl" data-file="${d[0]}">Download</button></td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+    <div class="card pad">
+      <div class="row" style="margin-bottom:12px">
+        <h3 class="grow" style="margin:0">My uploaded files</h3>
+        <button class="btn" id="upBtn">${svg('plus')} Upload file</button>
+        <input type="file" id="up" class="hide">
+      </div>
+      <div class="scroll">
+        <table>
+          <tr><th>File name</th><th>Submitted by</th><th>Upload Date</th></tr>
+          ${uploads.map(u => `
+            <tr>
+              <td><b>${u[0]}</b></td>
+              <td>${u[1]}</td>
+              <td>${u[2]}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `,
+
+  'employee:profile': () => `
+    <form class="grid" onsubmit="return false" style="display:grid;gap:18px">
+      <div class="card pad">
+        <h3>Personal Details</h3>
+        <div class="fields">
+          <div><label>First Name</label><input id="pfFirst" value="${me.first_name || ''}"></div>
+          <div><label>Last Name</label><input id="pfLast" value="${me.last_name || ''}"></div>
+          <div><label>Work Email</label><input id="pfEmail" value="${me.email || ''}"></div>
+          <div><label>City / Location</label><input id="pfCity" value="${me.city || ''}"></div>
+          <div><label>Department</label><input disabled value="${me.dept || ''}"></div>
+          <div><label>Employee ID</label><input disabled value="${me.id || ('EMP-' + me.emp_id)}"></div>
+        </div>
+      </div>
+      <div class="card pad">
+        <h3>Emergency Contact</h3>
+        <div class="fields">
+          <div><label>Contact Name</label><input placeholder="Suresh Raman" value="Suresh Raman"></div>
+          <div><label>Phone Number</label><input placeholder="+91 98401 23456" value="+91 98401 23456"></div>
+          <div><label>Relationship</label><input placeholder="Spouse / Parent" value="Sibling"></div>
+        </div>
+      </div>
+      <div class="card pad">
+        <h3>Bank &amp; Payroll details</h3>
+        <div class="fields">
+          <div><label>Account Holder</label><input value="${me.name}"></div>
+          <div><label>Account Number</label><input type="password" value="987654321012"></div>
+          <div><label>Bank IFSC / Code</label><input value="HDFC0001234"></div>
+        </div>
+      </div>
+      <div class="card pad">
+        <h3>Skills &amp; Competencies</h3>
+        <div id="skillsList">
+          <span class="chip">SQL <button type="button" onclick="this.parentElement.remove()">×</button></span>
+          <span class="chip">REST APIs <button type="button" onclick="this.parentElement.remove()">×</button></span>
+          <span class="chip">Node.js <button type="button" onclick="this.parentElement.remove()">×</button></span>
+          <span class="chip">Express <button type="button" onclick="this.parentElement.remove()">×</button></span>
+          <span class="chip">Database Design <button type="button" onclick="this.parentElement.remove()">×</button></span>
+        </div>
+        <div style="margin-top:12px">
+          <input placeholder="Type a skill and press Enter" id="skill">
+        </div>
+      </div>
+      <div>
+        <button class="btn" id="saveP">Save profile changes</button>
+      </div>
+    </form>
+  `,
+
+  // ADMIN VIEWS
+  'admin:dashboard': () => `
+    <div class="grid4">
+      ${stat('Total employees', EMP.length, dbConnected ? 'Synced with MySQL' : 'Active roster')}
+      ${stat('Available now', EMP.filter(e => e.status === 'Available').length, 'Ready for tasks')}
+      ${stat('Open tasks', tasks.filter(t => t.s < 3).length, 'In progress')}
+      ${stat('Avg. performance', Math.round(EMP.reduce((a, e) => a + (e.score || 80), 0) / (EMP.length || 1)), 'Across company')}
+    </div>
+    <div class="two">
+      <div class="card pad">
+        <h3>Team performance benchmark</h3>
+        ${barChart(
+          EMP.slice(0, 6).map(e => e.score || 80),
+          EMP.slice(0, 6).map(e => e.first_name || e.name.split(' ')[0])
+        )}
+      </div>
+      <div class="card pad">
+        <h3>Employees needing review</h3>
+        ${EMP.filter(e => (e.score || 80) < 80).slice(0, 5).map(e => `
+          <div class="row" style="padding:10px 0;border-bottom:1px solid var(--line)">
+            <span class="grow" style="font-weight:600">${e.name} <small style="color:var(--mute)">(${e.dept})</small></span>
+            <span class="pill High">Score: ${e.score || 76}</span>
+          </div>
+        `).join('')}
+        ${EMP.filter(e => (e.score || 80) < 80).length === 0 ? '<p style="color:var(--mute);margin:10px 0">All employees meet the 80+ benchmark.</p>' : ''}
+      </div>
+    </div>
+  `,
+
+  'admin:directory': () => `
+    <div class="card pad">
+      <div class="row" style="margin-bottom:16px;flex-wrap:wrap;justify-content:space-between">
+        <div class="row" style="flex-wrap:wrap;gap:10px">
+          <input id="q" placeholder="Search by name, ID or email..." style="max-width:280px">
+          <select id="fd" style="max-width:200px">
+            <option value="">All departments</option>
+            ${[...new Set(EMP.map(e => e.dept).filter(Boolean))].map(d => `<option value="${d}">${d}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn" id="addEmpBtn">${svg('plus')} Add Employee</button>
+      </div>
+      <div class="scroll">
+        <table id="dir"></table>
+      </div>
+    </div>
+  `,
+
+  'admin:alloc': () => `
+    <div class="row" style="justify-content:space-between">
+      <p style="margin:0;color:var(--mute)">Assign daily or sprint tasks with deadlines, assignees and priorities.</p>
+      <button class="btn" id="newTask">${svg('plus')} Assign new task</button>
+    </div>
+    <div class="card pad">
+      <div class="scroll">
+        <table>
+          <tr><th>Task Title</th><th>Assignee</th><th>Priority</th><th>Due Date</th><th>Current Stage</th></tr>
+          ${tasks.map(t => `
+            <tr>
+              <td><b>${t.t}</b></td>
+              <td>${t.assignee || 'Unassigned'}</td>
+              <td>${pill(t.p)}</td>
+              <td>${t.d}</td>
+              <td><span class="pill">${COLS[t.s]}</span></td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `,
+
+  'admin:perf': () => `
+    <div class="two">
+      <div class="card pad">
+        <div class="row" style="margin-bottom:12px;justify-content:space-between">
+          <h3 style="margin:0">Employee Roster</h3>
+          <span class="pill">${EMP.length} total</span>
+        </div>
+        <div style="display:grid;gap:6px;max-height:460px;overflow-y:auto">
+          ${EMP.map((e, i) => `
+            <button class="nav ${i === 0 ? 'on' : ''}" data-e="${i}">
+              <span class="grow">${e.name}</span>
+              <span class="pill">${e.score || 85}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="card pad" id="pe"></div>
+    </div>
+  `,
+
+  'admin:docs': () => `
+    <div class="card pad">
+      <div class="row" style="margin-bottom:12px">
+        <h3 class="grow" style="margin:0">Company Broadcast Documents</h3>
+        <button class="btn" id="upBtn">${svg('plus')} Broadcast document</button>
+        <input type="file" id="up" class="hide">
+      </div>
+      <div class="scroll">
+        <table>
+          <tr><th>Document</th><th>Category</th><th>Published Date</th></tr>
+          ${docs.map(d => `
+            <tr>
+              <td><b>${d[0]}</b></td>
+              <td><span class="pill">${d[1]}</span></td>
+              <td>${d[3]}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+    <div class="card pad">
+      <h3>Uploaded by Employees</h3>
+      <div class="scroll">
+        <table>
+          <tr><th>File Name</th><th>Employee</th><th>Submission Date</th><th>Action</th></tr>
+          ${uploads.map(u => `
+            <tr>
+              <td><b>${u[0]}</b></td>
+              <td>${u[1]}</td>
+              <td>${u[2]}</td>
+              <td><button class="btn ghost dl" data-file="${u[0]}">Review file</button></td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `,
+
+  'admin:attend': () => {
+    const c = s => EMP.filter(e => e.status === s).length;
+    return `
+      <div class="grid4">
+        ${stat('Available', c('Available'))}
+        ${stat('In meeting', c('In Meeting'))}
+        ${stat('On leave', c('On Leave'))}
+        ${stat('Out for the day', c('Out for the Day'))}
+      </div>
+      <div class="card pad">
+        <div class="row" style="margin-bottom:12px;justify-content:space-between">
+          <h3 style="margin:0">Live workforce presence</h3>
+          <span class="pill">${EMP.length} tracked</span>
+        </div>
+        <div class="scroll">
+          <table>
+            <tr><th>Employee ID</th><th>Name</th><th>Department</th><th>City</th><th>Live Status</th></tr>
+            ${EMP.map(e => `
+              <tr>
+                <td><b>${e.id || ('EMP-' + e.emp_id)}</b></td>
+                <td>${e.name}</td>
+                <td>${e.dept}</td>
+                <td>${e.city}</td>
+                <td>${sdot(e.status)}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      </div>
+    `;
+  }
+};
+
+// Event Bindings and Interactive Handlers
+function bind() {
+  // Drag and Drop for Kanban Cards
+  $$('.task').forEach(t => {
+    t.ondragstart = e => e.dataTransfer.setData('i', t.dataset.i);
+  });
+
+  $$('.col').forEach(c => {
+    c.ondragover = e => {
+      e.preventDefault();
+      c.classList.add('over');
+    };
+    c.ondragleave = () => c.classList.remove('over');
+    c.ondrop = e => {
+      e.preventDefault();
+      c.classList.remove('over');
+      const idx = +e.dataTransfer.getData('i');
+      if (tasks[idx]) {
+        tasks[idx].s = +c.dataset.c;
+        toast(`Task moved to ${COLS[+c.dataset.c]}`);
+        nav();
+      }
+    };
+  });
+
+  // Download simulation
+  $$('.dl').forEach(b => {
+    b.onclick = () => {
+      const file = b.dataset.file || 'document.pdf';
+      toast(`Accessing ${file}`);
+    };
+  });
+
+  // File Upload Handlers
+  const ub = $('#upBtn');
+  if (ub) ub.onclick = () => $('#up').click();
+
+  const up = $('#up');
+  if (up) {
+    up.onchange = e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const d = 'Oct 07';
+      if (role === 'admin') {
+        docs.unshift([f.name, 'Policy', 'HR', d]);
+      } else {
+        uploads.unshift([f.name, me.name, d]);
+      }
+      toast(`Uploaded ${f.name}`);
+      nav();
+    };
+  }
+
+  // Profile Save
+  const sp = $('#saveP');
+  if (sp) {
+    sp.onclick = async () => {
+      const first = $('#pfFirst') ? $('#pfFirst').value.trim() : me.first_name;
+      const last = $('#pfLast') ? $('#pfLast').value.trim() : me.last_name;
+      const email = $('#pfEmail') ? $('#pfEmail').value.trim() : me.email;
+      const city = $('#pfCity') ? $('#pfCity').value.trim() : me.city;
+
+      me.first_name = first;
+      me.last_name = last;
+      me.name = `${first} ${last}`.trim();
+      me.email = email;
+      me.city = city;
+
+      try {
+        await fetch(`${API_BASE}/employees/patchemployee/${me.emp_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ first_name: first, last_name: last, E_mail_id: email, city: city })
+        });
+      } catch (e) {}
+
+      toast('Profile changes saved successfully');
+    };
+  }
+
+  // Skill Add Tag
+  const sk = $('#skill');
+  if (sk) {
+    sk.onkeydown = e => {
+      if (e.key === 'Enter' && sk.value.trim()) {
+        const val = sk.value.replace(/[<>&]/g, '').trim();
+        const span = document.createElement('span');
+        span.className = 'chip';
+        span.innerHTML = `${val} <button type="button" onclick="this.parentElement.remove()">×</button>`;
+        $('#skillsList').appendChild(span);
+        sk.value = '';
+      }
+    };
+  }
+
+  // Clock in / out button
+  const ck = $('#clock');
+  if (ck) {
+    ck.onclick = () => {
+      if (ck.textContent.includes('Clock out')) {
+        ck.textContent = 'Clocked out at 18:10';
+        ck.classList.add('ghost');
+        if (me) me.status = 'Out for the Day';
+        toast('Clocked out for the day');
+      } else {
+        ck.textContent = 'Clock out for today';
+        ck.classList.remove('ghost');
+        if (me) me.status = 'Available';
+        toast('Clocked in successfully');
+      }
+    };
+  }
+
+  // Personal Task Modal
+  const apt = $('#addPersonalTask');
+  if (apt) {
+    apt.onclick = () => {
+      modal(`
+        <h3>New Personal Task</h3>
+        <label>Task Title *</label>
+        <input id="myTaskTitle" placeholder="e.g. Write integration test suite">
+        <div class="fields">
+          <div>
+            <label>Priority</label>
+            <select id="myTaskPri">
+              <option value="High">High</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label>Due Date</label>
+            <input type="text" id="myTaskDue" placeholder="e.g. Oct 20" value="">
+          </div>
+        </div>
+        <div class="row" style="margin-top:20px;justify-content:flex-end">
+          <button class="btn ghost" id="cx">Cancel</button>
+          <button class="btn" id="savePersonalTaskBtn">Add Task</button>
+        </div>
+      `);
+      $('#savePersonalTaskBtn').onclick = () => {
+        const title = $('#myTaskTitle').value.trim();
+        if (!title) { toast('Please enter a task title'); return; }
+        tasks.unshift({
+          id: Date.now(),
+          t: title,
+          p: $('#myTaskPri').value,
+          d: $('#myTaskDue').value || 'Pending',
+          s: 0,
+          assignee: me.name
+        });
+        closeModal();
+        toast('Task added to To Do');
+        nav();
+      };
+      $('#cx').onclick = closeModal;
+    };
+  }
+
+  // Admin Directory Table Rendering & Filter
+  if ($('#dir')) {
+    const draw = () => {
+      const q = ($('#q').value || '').toLowerCase();
+      const f = $('#fd').value;
+      const filtered = EMP.filter(e => {
+        const matchesDept = !f || e.dept === f;
+        const searchStr = `${e.name} ${e.id} ${e.email || ''} ${e.city || ''}`.toLowerCase();
+        return matchesDept && searchStr.includes(q);
+      });
+
+      $('#dir').innerHTML = `
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>City</th>
+            <th>Salary</th>
+            <th>Live Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(e => `
+            <tr>
+              <td><b>${e.id || ('EMP-' + e.emp_id)}</b></td>
+              <td>${e.name}</td>
+              <td>${e.dept}</td>
+              <td>${e.city}</td>
+              <td>₹${Number(e.salary || 0).toLocaleString()}</td>
+              <td>${sdot(e.status)}</td>
+              <td style="text-align:right">
+                <button class="btn ghost editEmpBtn" data-id="${e.emp_id}" style="padding:4px 8px;font-size:12px">${svg('edit')} Edit</button>
+                <button class="btn danger delEmpBtn" data-id="${e.emp_id}" style="padding:4px 8px;font-size:12px;margin-left:4px">${svg('trash')}</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+
+      // Bind Edit and Delete buttons
+      $$('.editEmpBtn').forEach(btn => {
+        btn.onclick = () => editEmployeeModal(Number(btn.dataset.id));
+      });
+      $$('.delEmpBtn').forEach(btn => {
+        btn.onclick = () => deleteEmployeeModal(Number(btn.dataset.id));
+      });
+    };
+
+    $('#q').oninput = draw;
+    $('#fd').onchange = draw;
+    draw();
+
+    // Add Employee Button Handler
+    const aeb = $('#addEmpBtn');
+    if (aeb) aeb.onclick = () => addEmployeeModal();
+  }
+
+  // Admin Assign Task Modal
+  const nt = $('#newTask');
+  if (nt) {
+    nt.onclick = () => {
+      modal(`
+        <h3>Assign Task</h3>
+        <label>Title</label>
+        <input id="nt" placeholder="e.g. Implement Payment Gateway">
+        <div class="fields">
+          <div>
+            <label>Priority</label>
+            <select id="np">
+              <option value="High">High</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label>Deadline</label>
+            <input type="text" id="nd" placeholder="e.g. Oct 25" value="">
+          </div>
+        </div>
+        <label>Assign to employee(s)</label>
+        <div class="picks">
+          ${EMP.map(e => `<label><input type="checkbox" value="${e.name}"> ${e.name} (${e.dept})</label>`).join('')}
+        </div>
+        <div class="row" style="margin-top:20px;justify-content:flex-end">
+          <button class="btn ghost" id="cx">Cancel</button>
+          <button class="btn" id="okAssign">Assign task</button>
+        </div>
+      `);
+      $('#cx').onclick = closeModal;
+      $('#okAssign').onclick = () => {
+        const t = $('#nt').value.trim();
+        if (!t) { toast('Please add a task title'); return; }
+        const assigned = Array.from($$('#modalRoot .picks input:checked')).map(cb => cb.value);
+        tasks.unshift({
+          id: Date.now(),
+          t: t,
+          p: $('#np').value,
+          d: $('#nd').value || 'TBD',
+          s: 0,
+          assignee: assigned.join(', ') || 'Team'
+        });
+        closeModal();
+        toast(`Task assigned to ${assigned.length || 1} employee(s)`);
+        nav();
+      };
+    };
+  }
+
+  // Admin Performance Editor
+  if ($('#pe')) {
+    const show = i => {
+      const e = EMP[i] || EMP[0];
+      if (!e) return;
+      $('#pe').innerHTML = `
+        <h3>${e.name} · ${e.dept}</h3>
+        ${[
+          ['Quality & Code Delivery', e.score || 85],
+          ['Timeliness & Sprint Velocity', Math.max(0, (e.score || 85) - 4)],
+          ['Collaboration & Review', Math.min(100, (e.score || 85) + 3)]
+        ].map(r => `
+          <div class="range">
+            <span>${r[0]}</span>
+            <input type="range" min="0" max="100" value="${r[1]}">
+            <b>${r[1]}</b>
+          </div>
+        `).join('')}
+        <label style="margin-top:14px">Performance Review Comments</label>
+        <textarea rows="3" placeholder="Write feedback and coaching comments for ${e.first_name || e.name}..."></textarea>
+        <div class="row" style="margin-top:16px">
+          <button class="btn" id="sv">Save evaluation</button>
+          <button class="btn ghost" id="rp">Generate PDF report</button>
+        </div>
+      `;
+      $$('.range input').forEach(r => {
+        r.oninput = () => r.nextElementSibling.textContent = r.value;
+      });
+      $('#sv').onclick = () => {
+        toast(`Evaluation saved for ${e.name}`);
+      };
+      $('#rp').onclick = () => {
+        toast(`Performance report generated for ${e.name}`);
+      };
+    };
+
+    $$('[data-e]').forEach(b => {
+      b.onclick = () => {
+        $$('[data-e]').forEach(x => x.classList.toggle('on', x === b));
+        show(+b.dataset.e);
+      };
+    });
+    show(0);
+  }
+}
+
+// Admin: Add Employee Modal
+function addEmployeeModal() {
+  modal(`
+    <h3>Add New Employee</h3>
+    <div class="fields">
+      <div><label>First Name *</label><input id="newFirst" placeholder="Enter first name" required></div>
+      <div><label>Last Name</label><input id="newLast" placeholder="Enter last name"></div>
+    </div>
+    <label>Work Email *</label>
+    <input type="email" id="newEmail" placeholder="name@company.com" required>
+    <div class="fields">
+      <div>
+        <label>Department</label>
+        <select id="newDept">
+          <option value="Engineering">Engineering</option>
+          <option value="Design">Design</option>
+          <option value="Operations">Operations</option>
+          <option value="Finance">Finance</option>
+          <option value="HR">HR</option>
+          <option value="sales">Sales</option>
+          <option value="support">Support</option>
+          <option value="development">Development</option>
+        </select>
+      </div>
+      <div><label>City / Location</label><input id="newCity" placeholder="Enter city / location" value=""></div>
+    </div>
+    <div class="fields">
+      <div><label>Salary (₹ / yr)</label><input type="number" id="newSal" placeholder="Enter annual salary" value=""></div>
+      <div><label>Experience (yrs)</label><input type="number" id="newExp" placeholder="Enter years of experience" value=""></div>
+    </div>
+    <div class="row" style="margin-top:20px;justify-content:flex-end">
+      <button class="btn ghost" id="cx">Cancel</button>
+      <button class="btn" id="saveNewEmpBtn">Save Employee</button>
+    </div>
+  `);
+
+  $('#cx').onclick = closeModal;
+  $('#saveNewEmpBtn').onclick = async () => {
+    const first = $('#newFirst').value.trim();
+    const last = $('#newLast').value.trim();
+    const email = $('#newEmail').value.trim();
+    const dept = $('#newDept').value;
+    const city = $('#newCity').value.trim();
+    const salary = $('#newSal').value !== '' ? Number($('#newSal').value) : null;
+    const experience = $('#newExp').value !== '' ? Number($('#newExp').value) : null;
+
+    if (!first || !email) {
+      toast('First name and email are required');
+      return;
+    }
+
+    const payload = {
+      first_name: first,
+      last_name: last,
+      E_mail_id: email,
+      dept_name: dept,
+      city: city || null,
+      location: city || null,
+      salary: salary,
+      experience: experience,
+      hire_date: new Date().toISOString().slice(0, 10),
+      deptid: 1021,
+      reports: 101
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/employees/saveemployee`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast('Employee added to MySQL database successfully!');
+        await fetchEmployees();
+        closeModal();
+        nav();
+        return;
+      }
+    } catch (e) {
+      console.warn('API error, saving locally:', e);
+    }
+
+    // Local fallback
+    const newId = EMP.length ? Math.max(...EMP.map(e => e.emp_id)) + 1 : 101;
+    EMP.unshift({
+      emp_id: newId,
+      id: 'EMP-' + newId,
+      name: `${first} ${last}`.trim(),
+      first_name: first,
+      last_name: last,
+      dept: dept,
+      status: 'Available',
+      email: email,
+      city: city,
+      salary: salary,
+      experience: experience,
+      score: 85
+    });
+    toast('Employee added to roster');
+    closeModal();
+    nav();
+  };
+}
+
+// Admin: Edit Employee Modal
+function editEmployeeModal(emp_id) {
+  const emp = EMP.find(e => e.emp_id === emp_id);
+  if (!emp) return;
+
+  modal(`
+    <h3>Edit Employee (${emp.id || ('EMP-' + emp.emp_id)})</h3>
+    <div class="fields">
+      <div><label>First Name</label><input id="editFirst" value="${emp.first_name || ''}"></div>
+      <div><label>Last Name</label><input id="editLast" value="${emp.last_name || ''}"></div>
+    </div>
+    <label>Work Email</label>
+    <input type="email" id="editEmail" value="${emp.email || ''}">
+    <div class="fields">
+      <div>
+        <label>Department</label>
+        <select id="editDept">
+          ${['Engineering', 'Design', 'Operations', 'Finance', 'HR', 'sales', 'support', 'development'].map(d => `
+            <option value="${d}" ${d.toLowerCase() === (emp.dept||'').toLowerCase() ? 'selected' : ''}>${d}</option>
+          `).join('')}
+        </select>
+      </div>
+      <div><label>City / Location</label><input id="editCity" value="${emp.city || ''}"></div>
+    </div>
+    <div class="fields">
+      <div><label>Salary (₹)</label><input type="number" id="editSal" value="${emp.salary || 0}"></div>
+      <div><label>Experience (yrs)</label><input type="number" id="editExp" value="${emp.experience || 0}"></div>
+    </div>
+    <div class="row" style="margin-top:20px;justify-content:flex-end">
+      <button class="btn ghost" id="cx">Cancel</button>
+      <button class="btn" id="updateEmpBtn">Update</button>
+    </div>
+  `);
+
+  $('#cx').onclick = closeModal;
+  $('#updateEmpBtn').onclick = async () => {
+    const first = $('#editFirst').value.trim();
+    const last = $('#editLast').value.trim();
+    const email = $('#editEmail').value.trim();
+    const dept = $('#editDept').value;
+    const city = $('#editCity').value.trim();
+    const salary = Number($('#editSal').value) || emp.salary;
+    const experience = Number($('#editExp').value) || emp.experience;
+
+    const payload = {
+      first_name: first,
+      last_name: last,
+      E_mail_id: email,
+      dept_name: dept,
+      city: city,
+      location: city,
+      salary: salary,
+      experience: experience
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/employees/updateemployee/${emp_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast('Employee updated in database!');
+        await fetchEmployees();
+        closeModal();
+        nav();
+        return;
+      }
+    } catch (e) {
+      console.warn('API update failed, updating in session:', e);
+    }
+
+    emp.first_name = first;
+    emp.last_name = last;
+    emp.name = `${first} ${last}`.trim();
+    emp.email = email;
+    emp.dept = dept;
+    emp.city = city;
+    emp.salary = salary;
+    emp.experience = experience;
+    toast('Employee updated in session');
+    closeModal();
+    nav();
+  };
+}
+
+// Admin: Delete Employee Modal
+function deleteEmployeeModal(emp_id) {
+  const emp = EMP.find(e => e.emp_id === emp_id);
+  if (!emp) return;
+
+  modal(`
+    <h3>Confirm Deletion</h3>
+    <p style="margin:12px 0 20px;color:var(--mute)">
+      Are you sure you want to delete <b>${emp.name}</b> (${emp.id || ('EMP-' + emp.emp_id)})? This action will remove the record from the database.
+    </p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost" id="cx">Cancel</button>
+      <button class="btn danger" id="confirmDeleteBtn">Delete Employee</button>
+    </div>
+  `);
+
+  $('#cx').onclick = closeModal;
+  $('#confirmDeleteBtn').onclick = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/deleteemployee/${emp_id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast('Employee deleted from MySQL database');
+        await fetchEmployees();
+        closeModal();
+        nav();
+        return;
+      }
+    } catch (e) {
+      console.warn('API delete error, deleting in session:', e);
+    }
+
+    EMP = EMP.filter(e => e.emp_id !== emp_id);
+    toast('Employee deleted');
+    closeModal();
+    nav();
+  };
+}
+
+// Initialize on Load
+(async function init() {
+  await fetchEmployees();
+})();
+</script>
+</body>
+</html>
