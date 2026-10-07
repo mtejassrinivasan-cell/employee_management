@@ -618,7 +618,10 @@ tbody tr:hover { background: var(--soft); }
         </div>
         <label for="em">Work email</label>
         <input id="em" type="email" placeholder="name@company.com">
-        <label for="pw">Password</label>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px">
+          <label for="pw" style="margin:0">Password</label>
+          <button class="link" type="button" id="toForgot" style="font-size:12px;font-weight:500">Forgot password?</button>
+        </div>
         <input id="pw" type="password" placeholder="Enter password">
         <button class="btn full" id="signin">Sign in as employee</button>
         <p class="sub" style="margin:12px 0 0;text-align:center;font-size:12px" id="credHint">
@@ -626,6 +629,26 @@ tbody tr:hover { background: var(--soft); }
         </p>
         <p class="sub" style="margin:14px 0 0;text-align:center" id="signupLine">
           New here? <button class="link" id="toSignup">Create employee account</button>
+        </p>
+      </div>
+      <!-- Forgot Password View -->
+      <div id="forgotView" class="hide">
+        <h2>Reset password</h2>
+        <p class="sub">Enter your work email and verify your identity to reset your password.</p>
+        <label for="fpEmail">Work email *</label>
+        <input id="fpEmail" type="email" placeholder="name@company.com">
+        <label for="fpCode">Security Verification</label>
+        <div style="display:flex;gap:8px">
+          <input id="fpCode" placeholder="Enter code or Emp ID">
+          <button class="btn ghost" type="button" id="fpSendCode" style="white-space:nowrap;padding:0 14px;font-size:12px">Send code</button>
+        </div>
+        <div class="fields">
+          <div><label for="fpNew">New password *</label><input id="fpNew" type="password" placeholder="Min 4 characters"></div>
+          <div><label for="fpConfirm">Confirm password *</label><input id="fpConfirm" type="password" placeholder="Re-enter password"></div>
+        </div>
+        <button class="btn full" id="doResetPass">Reset &amp; Save password</button>
+        <p class="sub" style="margin:18px 0 0;text-align:center">
+          <button class="link" id="fpToLogin">Back to sign in</button>
         </p>
       </div>
       <!-- Signup View -->
@@ -846,7 +869,7 @@ async function fetchEmployees() {
   try {
     const res = await fetch(`${API_BASE}/employees/getall`);
     const json = await res.json();
-    if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+    if (json && json.success && Array.isArray(json.data)) {
       dbConnected = true;
       EMP = json.data.map((r, i) => {
         const fullName = `${r.first_name || ''} ${r.last_name || ''}`.trim() || `Employee ${r.emp_id}`;
@@ -868,7 +891,9 @@ async function fetchEmployees() {
         };
       });
       // Maintain user state
-      if (!me || !EMP.some(e => e.emp_id === me.emp_id)) {
+      if (EMP.length === 0) {
+        me = { name: 'HR Admin', role: 'admin', score: 85 };
+      } else if (!me || !EMP.some(e => e.emp_id === me.emp_id)) {
         me = EMP[0];
       } else {
         me = EMP.find(e => e.emp_id === me.emp_id);
@@ -916,12 +941,83 @@ document.querySelectorAll('.tabs button').forEach(b => {
 
 $('#toSignup').onclick = () => {
   $('#loginView').classList.add('hide');
+  $('#forgotView').classList.add('hide');
   $('#signupView').classList.remove('hide');
 };
 
 $('#toLogin').onclick = () => {
   $('#signupView').classList.add('hide');
+  $('#forgotView').classList.add('hide');
   $('#loginView').classList.remove('hide');
+};
+
+$('#toForgot').onclick = () => {
+  $('#loginView').classList.add('hide');
+  $('#signupView').classList.add('hide');
+  $('#forgotView').classList.remove('hide');
+  if ($('#em').value) $('#fpEmail').value = $('#em').value;
+};
+
+$('#fpToLogin').onclick = () => {
+  $('#forgotView').classList.add('hide');
+  $('#signupView').classList.add('hide');
+  $('#loginView').classList.remove('hide');
+};
+
+$('#fpSendCode').onclick = () => {
+  const email = $('#fpEmail').value.trim().toLowerCase();
+  if (!email) {
+    toast('Please enter your work email first');
+    $('#fpEmail').focus();
+    return;
+  }
+  if (role === 'admin') {
+    if (!email.startsWith('hr@') && !email.startsWith('admin@')) {
+      toast('Admin account not found for this email');
+      return;
+    }
+  } else {
+    const matched = EMP.find(e => (e.email && e.email.toLowerCase() === email) || e.name.toLowerCase() === email);
+    if (!matched) {
+      toast('No employee registered with email: ' + email);
+      return;
+    }
+  }
+  $('#fpCode').value = '123456';
+  toast('Verification code sent! (Demo code: 123456)');
+};
+
+$('#doResetPass').onclick = () => {
+  const email = $('#fpEmail').value.trim().toLowerCase();
+  const code = $('#fpCode').value.trim();
+  const newPass = $('#fpNew').value;
+  const confirmPass = $('#fpConfirm').value;
+
+  if (!email) {
+    toast('Please enter your work email');
+    return;
+  }
+  if (!code) {
+    toast('Please enter the verification code');
+    return;
+  }
+  if (newPass.length < 4) {
+    toast('Password must be at least 4 characters');
+    return;
+  }
+  if (newPass !== confirmPass) {
+    toast('New passwords do not match');
+    return;
+  }
+
+  setStoredPassword(email, newPass);
+  toast('Password reset successfully! Please sign in with your new password.');
+  $('#em').value = email;
+  $('#pw').value = '';
+  $('#fpNew').value = '';
+  $('#fpConfirm').value = '';
+  $('#fpCode').value = '';
+  $('#fpToLogin').click();
 };
 
 // Sign Up Handler (Persists to MySQL Database)

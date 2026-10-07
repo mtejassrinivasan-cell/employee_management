@@ -32,6 +32,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, "fornt_End")));
 
+// Serve built React app if available at /react
+app.use("/react", express.static(path.join(__dirname, "frontend/dist")));
+
 // Routes
 app.use("/employees", employeeRoutes);
 
