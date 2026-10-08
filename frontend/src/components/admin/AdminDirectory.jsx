@@ -4,6 +4,8 @@ import { Modal } from '../Modal';
 
 const STAT_COLORS = {
   Available: 'var(--ok)',
+  Present: 'var(--ok)',
+  Absent: 'var(--bad)',
   'In Meeting': 'var(--warn)',
   'On Leave': 'var(--bad)',
   'Out for the Day': 'var(--mute)'
@@ -14,10 +16,32 @@ export const AdminDirectory = ({
   onAddEmployee,
   onEditEmployee,
   onDeleteEmployee,
-  onRefresh
+  onUpdateStatus,
+  onRefresh,
+  showToast
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      if (onRefresh) {
+        await onRefresh(true);
+      }
+      if (showToast) {
+        showToast('Employee directory refreshed from MySQL');
+      }
+    } catch (err) {
+      if (showToast) {
+        showToast('Notice: Could not refresh from server');
+      }
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -77,7 +101,8 @@ export const AdminDirectory = ({
       dept: emp.dept || 'Engineering',
       city: emp.city || '',
       salary: emp.salary ?? '',
-      experience: emp.experience ?? ''
+      experience: emp.experience ?? '',
+      status: emp.status || 'Available'
     });
     setIsEditOpen(true);
   };
@@ -120,8 +145,13 @@ export const AdminDirectory = ({
       city: editForm.city.trim() || null,
       location: editForm.city.trim() || null,
       salary: editForm.salary !== '' ? Number(editForm.salary) : selectedEmp.salary,
-      experience: editForm.experience !== '' ? Number(editForm.experience) : selectedEmp.experience
+      experience: editForm.experience !== '' ? Number(editForm.experience) : selectedEmp.experience,
+      live_status: editForm.status
     });
+
+    if (onUpdateStatus && editForm.status && editForm.status !== selectedEmp.status) {
+      await onUpdateStatus(editForm.status, selectedEmp.emp_id);
+    }
 
     setIsEditOpen(false);
   };
@@ -158,17 +188,42 @@ export const AdminDirectory = ({
                 </option>
               ))}
             </select>
+            {(searchTerm || filterDept) && (
+              <button
+                type="button"
+                className="btn ghost"
+                style={{ fontSize: '12px', padding: '5px 10px' }}
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterDept('');
+                }}
+                title="Clear active filters"
+              >
+                ✕ Clear
+              </button>
+            )}
           </div>
 
           <div className="row" style={{ gap: '8px' }}>
             {onRefresh && (
               <button
                 type="button"
-                className="btn ghost"
-                onClick={onRefresh}
+                className={`btn ghost ${isRefreshing ? 'loading' : ''}`}
+                onClick={handleRefresh}
+                disabled={isRefreshing}
                 title="Refresh employee data from MySQL"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                ⟳ Refresh
+                <span
+                  style={{
+                    display: 'inline-block',
+                    transition: 'transform 0.5s ease',
+                    transform: isRefreshing ? 'rotate(360deg)' : 'none'
+                  }}
+                >
+                  ⟳
+                </span>{' '}
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </button>
             )}
             <button type="button" className="btn" onClick={handleOpenAdd}>
@@ -199,11 +254,38 @@ export const AdminDirectory = ({
                   <td>{e.city}</td>
                   <td>₹{Number(e.salary || 0).toLocaleString()}</td>
                   <td>
-                    <span
-                      className="dot"
-                      style={{ background: STAT_COLORS[e.status] || 'var(--mute)' }}
-                    ></span>
-                    {e.status}
+                    {onUpdateStatus ? (
+                      <select
+                        aria-label={`Live Status for ${e.name}`}
+                        value={e.status || 'Available'}
+                        onChange={(evt) => onUpdateStatus(evt.target.value, e.emp_id)}
+                        style={{
+                          background: 'var(--panel)',
+                          color: 'var(--text)',
+                          border: `1px solid ${STAT_COLORS[e.status] || 'var(--line)'}`,
+                          borderRadius: '8px',
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="Available">🟢 Available</option>
+                        <option value="Present">🟢 Present</option>
+                        <option value="Absent">🔴 Absent</option>
+                        <option value="In Meeting">🟡 In Meeting</option>
+                        <option value="On Leave">🟠 On Leave</option>
+                        <option value="Out for the Day">⚪ Out for the Day</option>
+                      </select>
+                    ) : (
+                      <>
+                        <span
+                          className="dot"
+                          style={{ background: STAT_COLORS[e.status] || 'var(--mute)' }}
+                        ></span>
+                        {e.status}
+                      </>
+                    )}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <button
@@ -405,6 +487,21 @@ export const AdminDirectory = ({
                 onChange={(e) => setEditForm({ ...editForm, experience: e.target.value })}
               />
             </div>
+          </div>
+
+          <div>
+            <label>Live Attendance Status</label>
+            <select
+              value={editForm.status || 'Available'}
+              onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+            >
+              <option value="Available">🟢 Available</option>
+              <option value="Present">🟢 Present</option>
+              <option value="Absent">🔴 Absent</option>
+              <option value="In Meeting">🟡 In Meeting</option>
+              <option value="On Leave">🟠 On Leave</option>
+              <option value="Out for the Day">⚪ Out for the Day</option>
+            </select>
           </div>
 
           <div className="row" style={{ marginTop: '20px', justifyContent: 'flex-end' }}>

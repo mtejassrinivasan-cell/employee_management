@@ -547,9 +547,21 @@ tbody tr:hover {
 .pill.Medium { background: #fdf1d1; color: #92600a; }
 .pill.Low { background: #dff5e6; color: #166534; }
 
+.pill.pending, .pill.Pending { background: #fef3c7; color: #92400e; }
+.pill.approved, .pill.Approved { background: #dcfce7; color: #166534; }
+.pill.revision, .pill.Revision { background: #ffedd5; color: #9a3412; }
+.pill.rejected, .pill.Rejected { background: #fee2e2; color: #991b1b; }
+.pill.published, .pill.Published { background: #e0e7ff; color: #3730a3; }
+
 :root[data-theme="dark"] .pill.High { background: #451a1a; color: #fca5a5; }
 :root[data-theme="dark"] .pill.Medium { background: #3f2e10; color: #fde047; }
 :root[data-theme="dark"] .pill.Low { background: #12351f; color: #86efac; }
+
+:root[data-theme="dark"] .pill.pending, :root[data-theme="dark"] .pill.Pending { background: #451a03; color: #fde68a; }
+:root[data-theme="dark"] .pill.approved, :root[data-theme="dark"] .pill.Approved { background: #14532d; color: #86efac; }
+:root[data-theme="dark"] .pill.revision, :root[data-theme="dark"] .pill.Revision { background: #431407; color: #fdba74; }
+:root[data-theme="dark"] .pill.rejected, :root[data-theme="dark"] .pill.Rejected { background: #450a0a; color: #fca5a5; }
+:root[data-theme="dark"] .pill.published, :root[data-theme="dark"] .pill.Published { background: #1e1b4b; color: #c7d2fe; }
 
 /* Kanban Board */
 .kan {

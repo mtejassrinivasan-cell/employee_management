@@ -4,7 +4,7 @@ import { Modal } from '../Modal';
 
 const COLUMNS = ['To Do', 'In Progress', 'Under Review', 'Completed'];
 
-export const KanbanTasks = ({ tasks, onUpdateTaskStage, onAddTask, userName }) => {
+export const KanbanTasks = ({ tasks = [], onUpdateTaskStage, onAddTask, user, userName }) => {
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverCol, setDragOverCol] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +13,17 @@ export const KanbanTasks = ({ tasks, onUpdateTaskStage, onAddTask, userName }) =
   const [taskTitle, setTaskTitle] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [dueDate, setDueDate] = useState('');
+
+  const currentName = user?.name || userName || 'Me';
+
+  // Only display tasks assigned to this employee
+  const myTasks = tasks.filter((t) => {
+    if (t.emp_id && user?.emp_id && Number(t.emp_id) === Number(user.emp_id)) return true;
+    if (t.assignee && currentName && t.assignee.toLowerCase().includes(currentName.toLowerCase())) return true;
+    if (t.assignee && user?.first_name && t.assignee.toLowerCase().includes(user.first_name.toLowerCase())) return true;
+    if (t.assignee === 'Me' || t.assignee === currentName) return true;
+    return false;
+  });
 
   const handleDragStart = (e, taskId) => {
     e.dataTransfer.setData('text/plain', String(taskId));
@@ -47,7 +58,8 @@ export const KanbanTasks = ({ tasks, onUpdateTaskStage, onAddTask, userName }) =
       p: priority,
       d: dueDate.trim() || 'Pending',
       s: 0,
-      assignee: userName || 'Me'
+      assignee: currentName,
+      emp_id: user?.emp_id || null
     });
 
     setTaskTitle('');
@@ -58,18 +70,40 @@ export const KanbanTasks = ({ tasks, onUpdateTaskStage, onAddTask, userName }) =
 
   return (
     <>
-      <div className="row" style={{ marginBottom: '12px', justifyContent: 'space-between' }}>
+      <div className="row" style={{ marginBottom: '14px', justifyContent: 'space-between' }}>
         <p style={{ margin: 0, color: 'var(--mute)' }}>
-          Drag cards across columns to update task progress.
+          Assigned tasks for <b>{currentName}</b>. Drag cards to update progress.
         </p>
         <button type="button" className="btn" onClick={() => setIsModalOpen(true)}>
           <Icon name="plus" size={16} /> New Task
         </button>
       </div>
 
+      {myTasks.length === 0 && (
+        <div
+          style={{
+            background: 'var(--soft)',
+            borderRadius: '10px',
+            padding: '16px 20px',
+            marginBottom: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}
+        >
+          <span style={{ fontSize: '24px' }}>📋</span>
+          <div>
+            <b style={{ color: 'var(--ink)' }}>There is no task for today</b>
+            <small style={{ display: 'block', color: 'var(--mute)', marginTop: '2px' }}>
+              Management has not assigned any tasks to your queue. You can create a personal to-do item with the "+ New Task" button.
+            </small>
+          </div>
+        </div>
+      )}
+
       <div className="kan">
         {COLUMNS.map((colName, colIdx) => {
-          const colTasks = tasks.filter((t) => t.s === colIdx);
+          const colTasks = myTasks.filter((t) => t.s === colIdx);
           const isOver = dragOverCol === colIdx;
 
           return (

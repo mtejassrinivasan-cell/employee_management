@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 
-export const AttendanceView = ({ showToast, onStatusChange }) => {
-  const [isClockedOut, setIsClockedOut] = useState(false);
+export const AttendanceView = ({ showToast, onStatusChange, userStatus = 'Available' }) => {
+  const isClockedOut = userStatus === 'Out for the Day';
+
+  const handleSetStatus = (newStatus) => {
+    if (onStatusChange) onStatusChange(newStatus);
+    showToast(`Status updated to ${newStatus}`);
+  };
 
   const handleClockToggle = () => {
-    if (!isClockedOut) {
-      setIsClockedOut(true);
-      if (onStatusChange) onStatusChange('Out for the Day');
-      showToast('Clocked out at 18:10');
+    if (isClockedOut) {
+      handleSetStatus('Available');
     } else {
-      setIsClockedOut(false);
-      if (onStatusChange) onStatusChange('Available');
-      showToast('Clocked in successfully');
+      handleSetStatus('Out for the Day');
     }
   };
 
@@ -98,6 +99,59 @@ export const AttendanceView = ({ showToast, onStatusChange }) => {
           ))}
 
           <div style={{ marginTop: '18px' }}>
+            <div style={{ marginBottom: '10px', fontSize: '13px', fontWeight: 600 }}>
+              Live Status:{' '}
+              <span
+                className="dot"
+                style={{
+                  background:
+                    userStatus === 'Absent'
+                      ? 'var(--bad)'
+                      : userStatus === 'On Leave'
+                      ? 'var(--bad)'
+                      : userStatus === 'In Meeting'
+                      ? 'var(--warn)'
+                      : userStatus === 'Out for the Day'
+                      ? 'var(--mute)'
+                      : 'var(--ok)'
+                }}
+              ></span>{' '}
+              {userStatus}
+            </div>
+            <div className="row" style={{ gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <button
+                type="button"
+                className={`btn ${userStatus === 'Available' || userStatus === 'Present' ? '' : 'ghost'}`}
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => handleSetStatus('Available')}
+              >
+                🟢 Available / Present
+              </button>
+              <button
+                type="button"
+                className={`btn ${userStatus === 'Absent' ? 'danger' : 'ghost'}`}
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => handleSetStatus('Absent')}
+              >
+                🔴 Mark Absent
+              </button>
+              <button
+                type="button"
+                className={`btn ${userStatus === 'In Meeting' ? 'warn' : 'ghost'}`}
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => handleSetStatus('In Meeting')}
+              >
+                🟡 In Meeting
+              </button>
+              <button
+                type="button"
+                className={`btn ${userStatus === 'On Leave' ? 'danger' : 'ghost'}`}
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+                onClick={() => handleSetStatus('On Leave')}
+              >
+                🟠 On Leave
+              </button>
+            </div>
             <button
               type="button"
               className={`btn full ${isClockedOut ? 'ghost' : ''}`}

@@ -35,6 +35,14 @@ app.use(express.static(path.join(__dirname, "fornt_End")));
 // Serve built React app if available at /react
 app.use("/react", express.static(path.join(__dirname, "frontend/dist")));
 
+// Serve uploaded documents statically
+const fs = require("fs");
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use("/uploads", express.static(uploadsDir));
+
 // Routes
 app.use("/employees", employeeRoutes);
 
@@ -43,13 +51,14 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "fornt_End", "employee.html"));
 });
 
+const initDocs = require("./config/init_docs");
+
 // Start server
 async function startServer() {
     try {
-
         await db.query("SELECT 1");
-
-        console.log("Connected to MySQL successfully!");
+        await initDocs();
+        console.log("Connected to MySQL and initialized documents table successfully!");
 
         server.listen(PORT, () => {
             console.log(`Server running at http://localhost:${PORT}`);

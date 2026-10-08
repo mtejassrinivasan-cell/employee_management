@@ -23,13 +23,16 @@ export const AdminTaskAllocation = ({ tasks, employees, onAssignTask }) => {
     e.preventDefault();
     if (!title.trim()) return;
 
+    const matched = employees.find((emp) => selectedEmployees.includes(emp.name));
+
     onAssignTask({
       id: Date.now(),
       t: title.trim(),
       p: priority,
       d: deadline.trim() || 'TBD',
       s: 0,
-      assignee: selectedEmployees.join(', ') || 'Unassigned'
+      assignee: selectedEmployees.join(', ') || 'Unassigned',
+      emp_id: matched ? matched.emp_id : null
     });
 
     setTitle('');
@@ -72,6 +75,17 @@ export const AdminTaskAllocation = ({ tasks, employees, onAssignTask }) => {
                   <td><span className="pill">{COLS[t.s]}</span></td>
                 </tr>
               ))}
+              {tasks.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--mute)' }}>
+                    <span style={{ fontSize: '26px', display: 'block', marginBottom: '8px' }}>📝</span>
+                    <b>No active tasks in system</b>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px' }}>
+                      Click "Assign new task" above to assign work to team members.
+                    </p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

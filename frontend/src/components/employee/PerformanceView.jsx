@@ -35,12 +35,26 @@ export const PerformanceView = ({ user }) => {
       </div>
 
       <div className="card pad">
-        <h3>Latest supervisor evaluation</h3>
-        <p style={{ margin: 0, color: 'var(--ink)', lineHeight: 1.6 }}>
-          "Excellent execution on MySQL database optimization and REST API service development. Consistently meets sprint deliverables on time. Keep focusing on writing modular integration tests."
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3 style={{ margin: 0 }}>Latest supervisor evaluation</h3>
+          <span
+            className="pill"
+            style={{
+              fontWeight: 700,
+              background: (user?.score || 88) >= 80 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: (user?.score || 88) >= 80 ? '#10b981' : '#ef4444'
+            }}
+          >
+            Evaluated Score: {user?.score || 88}%
+          </span>
+        </div>
+        <p style={{ margin: 0, color: 'var(--ink)', lineHeight: 1.6, fontStyle: user?.feedback ? 'normal' : 'italic' }}>
+          {user?.feedback
+            ? `"${user.feedback}"`
+            : '"Consistently delivers sprint objectives on time with good attention to detail. Keep focusing on team collaboration and modular testing."'}
         </p>
         <small style={{ display: 'block', marginTop: '10px', color: 'var(--mute)' }}>
-          Evaluated by Engineering Lead · Oct 04, 2026
+          Evaluated by HR &amp; Admin {user?.review_date ? `· ${String(user.review_date).slice(0, 10)}` : '· Active sprint review'}
         </small>
       </div>
     </>

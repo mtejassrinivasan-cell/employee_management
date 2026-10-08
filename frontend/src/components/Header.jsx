@@ -53,8 +53,10 @@ export const Header = ({
           onChange={(e) => onStatusChange(e.target.value)}
         >
           <option value="Available">🟢 Available</option>
+          <option value="Present">🟢 Present</option>
+          <option value="Absent">🔴 Absent</option>
           <option value="In Meeting">🟡 In Meeting</option>
-          <option value="On Leave">🔴 On Leave</option>
+          <option value="On Leave">🟠 On Leave</option>
           <option value="Out for the Day">⚪ Out for the Day</option>
         </select>
       )}

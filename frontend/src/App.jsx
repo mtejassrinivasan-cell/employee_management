@@ -47,14 +47,7 @@ const INITIAL_SAMPLE_EMPLOYEES = [
   score: [88, 92, 76, 81, 69, 90, 84, 78][i]
 }));
 
-const INITIAL_TASKS = [
-  { id: 1, t: 'Build REST endpoints for orders', p: 'High', d: 'Oct 12', s: 0, assignee: 'Tejas M' },
-  { id: 2, t: 'Write unit tests for auth', p: 'Medium', d: 'Oct 15', s: 0, assignee: 'Meera Iyer' },
-  { id: 3, t: 'Fix dashboard filter bug', p: 'High', d: 'Oct 10', s: 1, assignee: 'Tejas M' },
-  { id: 4, t: 'Review API docs & OpenAPI spec', p: 'Low', d: 'Oct 18', s: 2, assignee: 'Divya N' },
-  { id: 5, t: 'Compile weekly sprint report', p: 'Medium', d: 'Oct 05', s: 3, assignee: 'Tejas M' },
-  { id: 6, t: 'Database schema migration', p: 'High', d: 'Oct 03', s: 3, assignee: 'Arun Kumar' }
-];
+const INITIAL_TASKS = [];
 
 const INITIAL_DOCS = [
   ['Leave policy 2026.pdf', 'Policy', 'HR', 'Oct 01'],
@@ -69,11 +62,26 @@ const INITIAL_UPLOADS = [
 ];
 
 export function App() {
-  const [role, setRole] = useState('employee');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userStatus, setUserStatus] = useState('Available');
-  const [activePage, setActivePage] = useState('dashboard');
+  const [role, setRole] = useState(() => {
+    return localStorage.getItem('wf_role') || 'employee';
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('wf_is_logged_in') === 'true';
+  });
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('wf_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [userStatus, setUserStatus] = useState(() => {
+    return localStorage.getItem('wf_user_status') || 'Available';
+  });
+  const [activePage, setActivePage] = useState(() => {
+    return localStorage.getItem('wf_active_page') || 'dashboard';
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Theme state
@@ -102,6 +110,31 @@ export function App() {
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
+  // Persist session to localStorage across browser refreshes
+  useEffect(() => {
+    localStorage.setItem('wf_role', role);
+  }, [role]);
+
+  useEffect(() => {
+    localStorage.setItem('wf_is_logged_in', String(isLoggedIn));
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('wf_current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('wf_current_user');
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('wf_user_status', userStatus);
+  }, [userStatus]);
+
+  useEffect(() => {
+    localStorage.setItem('wf_active_page', activePage);
+  }, [activePage]);
+
   // Apply Theme effect
   useEffect(() => {
     const themeName = isThemeDark ? 'dark' : 'light';
@@ -118,15 +151,23 @@ export function App() {
     }
   }, [role]);
 
-  // Fetch Employees from MySQL Backend
-  const loadEmployees = async () => {
+  // Fetch Employees from MySQL Backend (cache-busting enabled)
+  const loadEmployees = async (notify = false) => {
     try {
-      const res = await fetch(`${API_BASE}/employees/getall`);
+      const res = await fetch(`${API_BASE}/employees/getall?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setIsDbConnected(true);
         const mapped = json.data.map((r, i) => {
           const fullName = `${r.first_name || ''} ${r.last_name || ''}`.trim() || `Employee ${r.emp_id}`;
+          const fallbackScore = [88, 84, 76, 81, 89, 90, 84, 78, 85, 91][i % 10];
+          const score = r.score !== null && r.score !== undefined ? Number(r.score) : fallbackScore;
           return {
             emp_id: r.emp_id,
             id: `EMP-${r.emp_id}`,
@@ -134,31 +175,99 @@ export function App() {
             first_name: r.first_name || '',
             last_name: r.last_name || '',
             dept: r.dept_name || 'Engineering',
-            status: i % 4 === 0 ? 'Available' : i % 4 === 1 ? 'In Meeting' : i % 4 === 2 ? 'Available' : 'On Leave',
+            status: r.live_status || 'Available',
+            live_status: r.live_status || 'Available',
             email: r.E_mail_id || `emp${r.emp_id}@company.com`,
             city: r.city || r.location || 'Chennai',
             location: r.location || r.city || 'Chennai',
             salary: r.salary || 250000,
             experience: r.experience || 3,
             hire_date: r.hire_date ? String(r.hire_date).slice(0, 10) : '2022-01-15',
-            score: [88, 92, 76, 81, 69, 90, 84, 78, 85, 91][i % 10]
+            score,
+            quality: r.quality !== null && r.quality !== undefined ? Number(r.quality) : score,
+            timeliness: r.timeliness !== null && r.timeliness !== undefined ? Number(r.timeliness) : Math.max(50, score - 4),
+            collaboration: r.collaboration !== null && r.collaboration !== undefined ? Number(r.collaboration) : Math.min(100, score + 3),
+            feedback: r.feedback || '',
+            review_date: r.review_date || null
           };
         });
         setEmployees(mapped);
+        if (currentUser?.emp_id) {
+          const fresh = mapped.find((e) => e.emp_id === currentUser.emp_id);
+          if (fresh) {
+            setCurrentUser((prev) => ({ ...prev, ...fresh }));
+            if (fresh.status) {
+              setUserStatus(fresh.status);
+            }
+          }
+        }
+        if (notify) {
+          showToast(`Refreshed ${mapped.length} employees from database`);
+        }
+        return true;
       }
     } catch (err) {
       console.warn('API fetch notice (fallback sample active):', err.message);
+      if (notify) {
+        showToast('Notice: Could not reach server');
+      }
+      return false;
+    }
+  };
+
+  // Fetch Tasks from MySQL Backend (cache-busting enabled)
+  const loadTasks = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/tasks?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setTasks(json.data);
+      }
+    } catch (err) {
+      console.warn('API tasks fetch notice:', err.message);
+    }
+  };
+
+  // Fetch Documents from MySQL Backend (cache-busting enabled)
+  const loadDocuments = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/documents?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        const broadcast = json.data.filter((d) => d.doc_type === 'broadcast');
+        const empUploads = json.data.filter((d) => d.doc_type === 'employee_upload');
+        setDocs(broadcast);
+        setUploads(empUploads);
+      }
+    } catch (err) {
+      console.warn('API documents fetch notice:', err.message);
     }
   };
 
   useEffect(() => {
     loadEmployees();
-    // Auto-sync polling every 3 seconds so Admin automatically sees changes made by teammates!
+    loadTasks();
+    loadDocuments();
+    // Auto-sync polling every 3 seconds so Admin and Employee see live changes
     const pollInterval = setInterval(() => {
       loadEmployees();
+      loadTasks();
+      loadDocuments();
     }, 3000);
     return () => clearInterval(pollInterval);
-  }, []);
+  }, [currentUser?.emp_id]);
 
   // Auth Handlers
   const handleLogin = ({ role: selectedRole, user }) => {
@@ -172,6 +281,9 @@ export function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
+    localStorage.removeItem('wf_is_logged_in');
+    localStorage.removeItem('wf_current_user');
+    localStorage.removeItem('wf_active_page');
     showToast('Signed out');
   };
 
@@ -381,24 +493,178 @@ export function App() {
     setEmployees(employees.map((e) => (e.emp_id === currentUser?.emp_id ? updated : e)));
   };
 
+  const handleSavePerformance = async (empId, perfData) => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/performance/${empId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(perfData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Performance evaluation and feedback saved to MySQL!');
+        await loadEmployees();
+        return true;
+      }
+    } catch (e) {
+      console.warn('API performance save notice:', e);
+    }
+
+    setEmployees((prev) =>
+      prev.map((emp) =>
+        emp.emp_id === empId
+          ? {
+              ...emp,
+              score: perfData.score,
+              quality: perfData.quality,
+              timeliness: perfData.timeliness,
+              collaboration: perfData.collaboration,
+              feedback: perfData.feedback
+            }
+          : emp
+      )
+    );
+    showToast('Performance evaluation saved in session');
+    return true;
+  };
+
+  const handleUpdateStatus = async (newStatus, targetEmpId = null) => {
+    const empId = targetEmpId || activeUser?.emp_id;
+    setUserStatus(newStatus);
+    if (!empId) return;
+
+    // Optimistically update employee list
+    setEmployees((prev) =>
+      prev.map((e) => (e.emp_id === empId ? { ...e, status: newStatus, live_status: newStatus } : e))
+    );
+
+    try {
+      const res = await fetch(`${API_BASE}/employees/status/${empId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        showToast(`Status updated to ${newStatus}`);
+      }
+      await loadEmployees();
+    } catch (e) {
+      console.warn('Status update API error:', e);
+    }
+  };
+
   // Task & Document Handlers
-  const handleAddTask = (newTask) => {
+  const handleAddTask = async (newTask) => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Task assigned successfully');
+        await loadTasks();
+        return;
+      }
+    } catch (e) {
+      console.warn('Task save notice:', e);
+    }
     setTasks([newTask, ...tasks]);
     showToast('Task added to To Do');
   };
 
-  const handleUpdateTaskStage = (taskId, newStage) => {
+  const handleUpdateTaskStage = async (taskId, newStage) => {
+    try {
+      await fetch(`${API_BASE}/employees/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: newStage })
+      });
+      await loadTasks();
+    } catch (e) {
+      console.warn('Task patch notice:', e);
+    }
     const colNames = ['To Do', 'In Progress', 'Under Review', 'Completed'];
     setTasks(tasks.map((t) => (t.id === taskId ? { ...t, s: newStage } : t)));
     showToast(`Task moved to ${colNames[newStage]}`);
   };
 
-  const handleUploadFile = (fileName) => {
-    setUploads([[fileName, currentUser?.name || 'Me', 'Oct 07'], ...uploads]);
+  const handleUploadFile = async (formData) => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/documents/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Document uploaded successfully for HR review');
+        await loadDocuments();
+        return;
+      }
+    } catch (e) {
+      console.warn('Document upload notice:', e);
+    }
+    showToast('Document uploaded');
+    await loadDocuments();
   };
 
-  const handleBroadcastDoc = (fileName) => {
-    setDocs([[fileName, 'Policy', 'HR', 'Oct 07'], ...docs]);
+  const handleBroadcastDoc = async (formData) => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/documents/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Document broadcasted to all employees');
+        await loadDocuments();
+        return;
+      }
+    } catch (e) {
+      console.warn('Document broadcast notice:', e);
+    }
+    showToast('Document broadcasted');
+    await loadDocuments();
+  };
+
+  const handleReviewDoc = async (docId, reviewData) => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/documents/${docId}/review`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Document marked as ${reviewData.status}`);
+        await loadDocuments();
+        return;
+      }
+    } catch (e) {
+      console.warn('Document review notice:', e);
+    }
+    showToast('Review status updated');
+    await loadDocuments();
+  };
+
+  const handleDeleteDoc = async (docId) => {
+    try {
+      const res = await fetch(`${API_BASE}/employees/documents/${docId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Document removed');
+        await loadDocuments();
+        return;
+      }
+    } catch (e) {
+      console.warn('Document delete notice:', e);
+    }
+    showToast('Document removed');
+    await loadDocuments();
   };
 
   const pageTitles = {
@@ -414,6 +680,11 @@ export function App() {
     docs: 'Document center',
     attend: 'Attendance monitor'
   };
+
+  const activeUser =
+    role === 'employee' && currentUser?.emp_id
+      ? employees.find((e) => e.emp_id === currentUser.emp_id) || currentUser
+      : currentUser;
 
   if (!isLoggedIn) {
     return (
@@ -446,9 +717,9 @@ export function App() {
         <Header
           role={role}
           title={pageTitles[activePage] || 'Overview'}
-          user={currentUser}
-          userStatus={userStatus}
-          onStatusChange={setUserStatus}
+          user={activeUser}
+          userStatus={activeUser?.status || userStatus}
+          onStatusChange={handleUpdateStatus}
           onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
           showToast={showToast}
         />
@@ -456,33 +727,41 @@ export function App() {
         <div className="content">
           {/* Employee Views */}
           {role === 'employee' && activePage === 'dashboard' && (
-            <EmployeeDashboard user={currentUser} tasks={tasks} />
+            <EmployeeDashboard user={activeUser} tasks={tasks} />
           )}
           {role === 'employee' && activePage === 'tasks' && (
             <KanbanTasks
               tasks={tasks}
               onUpdateTaskStage={handleUpdateTaskStage}
               onAddTask={handleAddTask}
-              userName={currentUser?.name}
+              user={activeUser}
+              userName={activeUser?.name}
             />
           )}
           {role === 'employee' && activePage === 'performance' && (
-            <PerformanceView user={currentUser} />
+            <PerformanceView user={activeUser} />
           )}
           {role === 'employee' && activePage === 'attendance' && (
-            <AttendanceView showToast={showToast} onStatusChange={setUserStatus} />
+            <AttendanceView
+              user={activeUser}
+              userStatus={activeUser?.status || userStatus}
+              showToast={showToast}
+              onStatusChange={handleUpdateStatus}
+            />
           )}
           {role === 'employee' && activePage === 'documents' && (
             <DocumentHub
               docs={docs}
               uploads={uploads}
               onUploadFile={handleUploadFile}
+              onDeleteDoc={handleDeleteDoc}
+              currentUser={currentUser}
               showToast={showToast}
             />
           )}
           {role === 'employee' && activePage === 'profile' && (
             <ProfileSettings
-              user={currentUser}
+              user={activeUser}
               onUpdateProfile={handleUpdateProfile}
               showToast={showToast}
             />
@@ -502,7 +781,9 @@ export function App() {
               onAddEmployee={handleAddEmployee}
               onEditEmployee={handleEditEmployee}
               onDeleteEmployee={handleDeleteEmployee}
+              onUpdateStatus={handleUpdateStatus}
               onRefresh={loadEmployees}
+              showToast={showToast}
             />
           )}
           {role === 'admin' && activePage === 'alloc' && (
@@ -513,18 +794,29 @@ export function App() {
             />
           )}
           {role === 'admin' && activePage === 'perf' && (
-            <AdminPerformanceEditor employees={employees} showToast={showToast} />
+            <AdminPerformanceEditor
+              employees={employees}
+              onSavePerformance={handleSavePerformance}
+              showToast={showToast}
+            />
           )}
           {role === 'admin' && activePage === 'docs' && (
             <AdminDocumentCenter
               docs={docs}
               uploads={uploads}
               onBroadcastDoc={handleBroadcastDoc}
+              onReviewDoc={handleReviewDoc}
+              onDeleteDoc={handleDeleteDoc}
               showToast={showToast}
             />
           )}
           {role === 'admin' && activePage === 'attend' && (
-            <AdminAttendanceMonitor employees={employees} />
+            <AdminAttendanceMonitor
+              employees={employees}
+              onUpdateStatus={handleUpdateStatus}
+              onRefresh={loadEmployees}
+              showToast={showToast}
+            />
           )}
         </div>
       </main>
